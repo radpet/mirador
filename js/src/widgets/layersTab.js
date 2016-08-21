@@ -15,9 +15,10 @@
 
   $.LayersTab.prototype = {
     init: function() {
+      //console.log('LayersTab',this);
+    //  console.log('LayersTab:Manifest',this.manifest.getCanvases());
       var _this = this;
-      this.windowId = this.windowId;
-
+      console.log(this.windowId);
       this.localState({
         id: 'layersTab',
         visible: this.visible,
@@ -25,10 +26,11 @@
         empty: true
       }, true);
 
-      this.listenForActions();
-      this.render(this.localState());
       this.loadTabComponents();
+      this.listenForActions();
       this.bindEvents();
+      this.render(this.localState());
+
     },
 
     localState: function(state, initial) {
@@ -46,12 +48,34 @@
     loadTabComponents: function() {
       var _this = this;
 
+      this.osdOpenEvent = _this.eventEmitter.subscribe('osdOpen.'+_this.windowId,function(event,osd,canvasID){
+        _this.element.html('');
+        _this.layers = new $.Layers({
+          windowId:_this.windowId,
+          eventEmitter:_this.eventEmitter,
+          manifest:_this.manifest,
+          canvasID:canvasID,
+          canvasManifestPersistence: new $.CanvasManifestPersistence({
+            manifest:_this.manifest,
+            canvasID:canvasID
+          }),
+          state:_this.state
+        });
+        _this.element.append(_this.layers.getView());
+
+        //_this.eventEmitter.unsubscribe(_this.osdOpenEvent.name,_this.osdOpenEvent.handler);
+      });
+
+
     },
 
-    tabStateUpdated: function(visible) {
+    tabStateUpdated: function(data) {
       var localState = this.localState();
-      localState.visible = localState.visible ? false : true;
-
+      if (data.tabs[data.selectedTabIndex].options.id === 'layersTab') {
+        localState.visible = true;
+      } else {
+        localState.visible = false;
+      }
       this.localState(localState);
     },
 
@@ -65,11 +89,17 @@
       });
 
       _this.eventEmitter.subscribe('tabStateUpdated.' + _this.windowId, function(_, data) {
-        _this.tabStateUpdated(data.layersTab);
+        _this.tabStateUpdated(data);
       });
 
       _this.eventEmitter.subscribe('currentCanvasIDUpdated.' + _this.windowId, function(event, canvasID) {
+       // console.log(canvasID);
         //update layers for this canvasID
+        if(_this.layers){
+          _this.layers.destroy();
+          _this.layers = null;
+        }
+
       });
     },
 
@@ -79,16 +109,12 @@
     },
 
     render: function(state) {
-      var _this = this,
-      templateData = {};
+      var _this = this;
 
-      if (this.element) {
-        _this.appendTo.find(".layersPanel").remove();
+      if (!this.element) {
+        //_this.appendTo.find(".layersPanel").remove();
+        this.element = jQuery(_this.template()).appendTo(_this.appendTo);
       }
-      this.element = jQuery(_this.template(templateData)).appendTo(_this.appendTo);
-      
-      _this.bindEvents();
-
 
       if (state.visible) {
         this.element.show();

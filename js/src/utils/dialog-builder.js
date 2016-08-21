@@ -9,22 +9,26 @@
 
   $.DialogBuilder.prototype = {
     confirm: function (message, callback) {
-      return this._attachEvents(bootbox.confirm(message, callback));
+      this.dialog(bootbox.confirm(message, callback));
+      this._attachEvents(this.dialog);
+      return this.dialog;
     },
-    dialog: function(opts){
-      this._attachEvents(bootbox.dialog(opts));
+    dialog: function (opts) {
+      this.dialog = bootbox.dialog(opts);
+      this._attachEvents(this.dialog);
+      return this.dialog;
     },
-    _attachEvents:function(el){
+    _attachEvents: function (el) {
       var _this = this;
-      jQuery(el).on("shown.bs.modal",function(){
+      jQuery(el).on("shown.bs.modal", function () {
         // set bigger z-index that one used in qtip
         var zIndex = 20000;
 
-        jQuery(el).css('z-index',zIndex);
+        jQuery(el).css('z-index', zIndex);
         // workaround because bootstap does not support external configuration for backdrop parent
-        jQuery('.modal-backdrop').prependTo(_this.container).css('z-index',zIndex);
+        jQuery('.modal-backdrop').prependTo(_this.container).css('z-index', zIndex);
       });
-      jQuery(el).on("hidden.bs.modal",function(){
+      jQuery(el).on("hidden.bs.modal", function () {
         jQuery('.modal-backdrop').remove();
       });
     }

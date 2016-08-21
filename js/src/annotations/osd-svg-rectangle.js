@@ -39,6 +39,7 @@
     },
 
     _createSegments:function(initialPoint,pixel, overlay){
+      console.log(initialPoint);
       var segments = [];
       // point indexes
       // 0    1&2    3
