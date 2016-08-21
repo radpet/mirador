@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
   // ----------
   grunt.loadNpmTasks('grunt-contrib-compress');
@@ -15,44 +15,45 @@ module.exports = function(grunt) {
 
   // ----------
   var distribution = 'build/mirador/mirador.js',
-  minified = 'build/mirador/mirador.min.js',
-  releaseRoot = '../site-build/built-mirador/',
+    minified = 'build/mirador/mirador.min.js',
+    releaseRoot = '../site-build/built-mirador/',
 
-  // libraries/plugins
-  vendors = [
-    'js/lib/jquery.min.js',
-    'js/lib/jquery-migrate-3.0.0.min.js',
-    'js/lib/jquery-ui.min.js',
-    'js/lib/modal.js',
-    'js/lib/bootbox.js',
-    'js/lib/jquery.scrollTo.min.js',
-    'js/lib/jquery.qtip.min.js',
-    'js/lib/state-machine.min.js',
-    'js/lib/tinymce.min.js',
-    'js/lib/handlebars.js',
-    'js/lib/openseadragon.js',
-    'js/lib/openseadragon-scalebar.js',
-    'js/lib/d3.v3.min.js',
-    'js/lib/pubsub.min.js',
-    'js/lib/URI.min.js',
-    'js/lib/mousetrap.min.js',
-    'js/lib/isfahan.js',
-    'js/lib/paper-core.min.js',
-    'js/lib/spectrum.js',
-    'js/lib/i18next.min.js',
-    'js/lib/modernizr.custom.js'
-  ],
+    // libraries/plugins
+    vendors = [
+      'js/lib/jquery.min.js',
+      'js/lib/jquery-migrate-3.0.0.min.js',
+      'js/lib/jquery-ui.min.js',
+      'js/lib/modal.js',
+      'js/lib/bootbox.js',
+      'js/lib/jquery.scrollTo.min.js',
+      'js/lib/jquery.qtip.min.js',
+      'js/lib/state-machine.min.js',
+      'js/lib/tinymce.min.js',
+      'js/lib/handlebars.js',
+      'js/lib/openseadragon.js',
+      'js/lib/openseadragon-scalebar.js',
+      'js/lib/d3.v3.min.js',
+      'js/lib/pubsub.min.js',
+      'js/lib/URI.min.js',
+      'js/lib/mousetrap.min.js',
+      'js/lib/isfahan.js',
+      'js/lib/paper-core.min.js',
+      'js/lib/spectrum.js',
+      'js/lib/i18next.min.js',
+      'js/lib/modernizr.custom.js'
+    ],
 
-  // source files
-  sources = [
-    'js/src/*.js',
-    'js/src/viewer/*.js',
-    'js/src/manifests/*.js',
-    'js/src/annotations/*.js',
-    'js/src/workspaces/*.js',
-    'js/src/widgets/*.js',
-    'js/src/utils/*.js'
-  ];
+    // source files
+    sources = [
+      'js/src/*.js',
+      'js/src/viewer/*.js',
+      'js/src/manifests/*.js',
+      'js/src/annotations/*.js',
+      'js/src/workspaces/*.js',
+      'js/src/widgets/*.js',
+      'js/src/utils/*.js',
+      'js/src/layers/*.js'
+    ];
 
   // ----------
   // Project configuration.
@@ -75,7 +76,7 @@ module.exports = function(grunt) {
           banner: '//! <%= pkg.name %> <%= pkg.version %>\n' + '//! Built on <%= grunt.template.today("yyyy-mm-dd") %>\n',
           process: true
         },
-        src:  [ "<banner>" ].concat(vendors, sources),
+        src: ["<banner>"].concat(vendors, sources),
         dest: distribution
       },
       css: {
@@ -88,7 +89,8 @@ module.exports = function(grunt) {
           'css/jquery.qtip.min.css',
           'css/spectrum.css',
           'css/mirador.css',
-          'css/material-icons.css'
+          'css/material-icons.css',
+          'css/layers.css'
         ],
         dest: 'build/mirador/css/mirador-combined.css'
       }
@@ -162,7 +164,7 @@ module.exports = function(grunt) {
           archive: 'build/mirador.zip'
         },
         files: [
-          { expand: true, cwd: 'build/', src: ['mirador/**'] }
+          {expand: true, cwd: 'build/', src: ['mirador/**']}
         ]
       },
       tar: {
@@ -170,7 +172,7 @@ module.exports = function(grunt) {
           archive: 'build/mirador.tar'
         },
         files: [
-          { expand: true, cwd: 'build/', src: [ 'mirador/**' ] }
+          {expand: true, cwd: 'build/', src: ['mirador/**']}
         ]
       }
     },
@@ -190,7 +192,7 @@ module.exports = function(grunt) {
           livereload: {
             // Here we watch the files the sass task will compile to
             // These files are sent to the live reload server after sass compiles to them
-            options: { livereload: true },
+            options: {livereload: true},
             files: ['build/**/*']
           }
         },
@@ -243,8 +245,8 @@ module.exports = function(grunt) {
   // ----------
   // Copy:release task.
   // Copies the contents of the build folder into the release folder.
-  grunt.registerTask('copy:release', function() {
-    grunt.file.recurse('build', function(abspath, rootdir, subdir, filename) {
+  grunt.registerTask('copy:release', function () {
+    grunt.file.recurse('build', function (abspath, rootdir, subdir, filename) {
       var dest = releaseRoot +
         (subdir ? subdir + '/' : '/') +
         filename;
@@ -256,12 +258,12 @@ module.exports = function(grunt) {
   // ----------
   // Build task.
   // Cleans out the build folder and builds the code and images into it, checking lint.
-  grunt.registerTask('build', [ 'clean:build', 'git-describe', 'jshint', 'concat:css', 'uglify', 'cssmin', 'copy']);
+  grunt.registerTask('build', ['clean:build', 'git-describe', 'jshint', 'concat:css', 'uglify', 'cssmin', 'copy']);
 
   // ----------
   // Dev Build task.
   // Build, but skip the time-consuming and obscurantist minification and uglification.
-  grunt.registerTask('dev_build', [ 'clean:build', 'git-describe', 'jshint', 'concat', 'copy']);
+  grunt.registerTask('dev_build', ['clean:build', 'git-describe', 'jshint', 'concat', 'copy']);
 
   // ----------
   // Package task.
@@ -286,6 +288,6 @@ module.exports = function(grunt) {
   // ----------
   // Runs this on travis.
   grunt.registerTask('ci', [
-                     'jshint'
+    'jshint'
   ]);
 };
