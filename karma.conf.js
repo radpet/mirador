@@ -1,7 +1,7 @@
 // Karma configuration
 // Generated on Tue May 03 2016 11:44:23 GMT-0400 (EDT)
 
-module.exports = function(config) {
+module.exports = function (config) {
   config.set({
 
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -23,6 +23,7 @@ module.exports = function(config) {
       'js/lib/tinymce.min.js',
       'js/lib/handlebars.js',
       'js/lib/openseadragon.js',
+      'js/lib/openseadragon-scalebar.js',
       'js/lib/d3.v3.min.js',
       'js/lib/pubsub.min.js',
       'js/lib/URI.min.js',
@@ -58,8 +59,7 @@ module.exports = function(config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-    },
+    preprocessors: {},
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
