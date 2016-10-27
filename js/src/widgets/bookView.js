@@ -121,62 +121,68 @@
       });
     },
 
-bindEvents: function() {
+    bindEvents: function () {
       var _this = this;
 
-      this.element.find('.mirador-osd-next').on('click', function() {
+      this.element.find('.hud-control').click(function () {
+        _this.eventEmitter.publish('slotActivated.' + _this.windowId, {
+          view: 'BookView'
+        });
+      });
+
+      this.element.find('.mirador-osd-next').on('click', function () {
         _this.next();
       });
 
-      this.element.find('.mirador-osd-previous').on('click', function() {
+      this.element.find('.mirador-osd-previous').on('click', function () {
         _this.previous();
       });
 
-      this.element.find('.mirador-osd-go-home').on('click', function() {
+      this.element.find('.mirador-osd-go-home').on('click', function () {
         _this.osd.viewport.goHome();
       });
 
-      this.element.find('.mirador-osd-up').on('click', function() {
+      this.element.find('.mirador-osd-up').on('click', function () {
         var panBy = _this.getPanByValue();
         _this.osd.viewport.panBy(new OpenSeadragon.Point(0, -panBy.y));
         _this.osd.viewport.applyConstraints();
       });
-      this.element.find('.mirador-osd-right').on('click', function() {
+      this.element.find('.mirador-osd-right').on('click', function () {
         var panBy = _this.getPanByValue();
         _this.osd.viewport.panBy(new OpenSeadragon.Point(panBy.x, 0));
         _this.osd.viewport.applyConstraints();
       });
-      this.element.find('.mirador-osd-down').on('click', function() {
+      this.element.find('.mirador-osd-down').on('click', function () {
         var panBy = _this.getPanByValue();
         _this.osd.viewport.panBy(new OpenSeadragon.Point(0, panBy.y));
         _this.osd.viewport.applyConstraints();
       });
-      this.element.find('.mirador-osd-left').on('click', function() {
+      this.element.find('.mirador-osd-left').on('click', function () {
         var panBy = _this.getPanByValue();
         _this.osd.viewport.panBy(new OpenSeadragon.Point(-panBy.x, 0));
         _this.osd.viewport.applyConstraints();
       });
 
-      this.element.find('.mirador-osd-zoom-in').on('click', function() {
+      this.element.find('.mirador-osd-zoom-in').on('click', function () {
         var osd = _this.osd;
-        if ( osd.viewport ) {
+        if (osd.viewport) {
           osd.viewport.zoomBy(
-            osd.zoomPerClick / 1.0
+              osd.zoomPerClick / 1.0
           );
           osd.viewport.applyConstraints();
         }
       });
-      this.element.find('.mirador-osd-zoom-out').on('click', function() {
+      this.element.find('.mirador-osd-zoom-out').on('click', function () {
         var osd = _this.osd;
-        if ( osd.viewport ) {
+        if (osd.viewport) {
           osd.viewport.zoomBy(
-            1.0 / osd.zoomPerClick
+              1.0 / osd.zoomPerClick
           );
           osd.viewport.applyConstraints();
         }
       });
 
-      this.element.find('.mirador-osd-toggle-bottom-panel').on('click', function() {
+      this.element.find('.mirador-osd-toggle-bottom-panel').on('click', function () {
         _this.eventEmitter.publish('TOGGLE_BOTTOM_PANEL_VISIBILITY.' + _this.windowId);
       });
     },
