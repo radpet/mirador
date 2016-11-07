@@ -12,35 +12,58 @@
     this.eventsSubscriptions = [];
 
     this.init();
-    this.listenForActions();
   };
 
   $.OsdRegionDrawTool.prototype = {
 
     init: function() {
-      this.svgOverlay = this.osdViewer.svgOverlay(this.osdViewer.id, this.windowId, this.state, this.eventEmitter, this.manifestor);
+      this.svgOverlay = this.osdViewer.svgOverlay(this.osdViewer.id, this.windowId, this.state, this.eventEmitter);
       this.svgOverlay.show();
       this.svgOverlay.disable();
+
+      this.listenForActions();
     },
 
-    enterCreateMode: function() {
-      this.osdViewer.setMouseNavEnabled(false);
-      this.svgOverlay.show();
-      this.svgOverlay.enable();
-    },
-
-    enterCreateShapeMode: function() {
-      if(!this.svgOverlay.inEditMode){
-        this.osdViewer.setMouseNavEnabled(false);
-        this.svgOverlay.show();
-        this.svgOverlay.enable();
+    enterDisplayAnnotations: function() {
+      // if a user selected the pointer mode but is still actively
+      // working on an annotation, don't re-render
+      if (!this.svgOverlay.inEditOrCreateMode) {
+        this.exitEditMode(true);
+        this.render();
       }
     },
 
-    enterEditMode: function() {
+    enterCreateAnnotation: function() {
+      // if a user selected went from pointer to a shape but is still actively
+      // working on an annotation, don't re-render
+      if (!this.svgOverlay.inEditOrCreateMode) {
+        this.osdViewer.setMouseNavEnabled(false);
+        this.svgOverlay.show();
+        this.svgOverlay.enable();
+        this.render();
+      } else {
+        this.svgOverlay.checkToRemoveFocus();
+      }
+    },
+
+    enterCreateShape: function() {
+      if (!this.svgOverlay.inEditOrCreateMode) {
+        this.osdViewer.setMouseNavEnabled(false);
+        this.svgOverlay.show();
+        this.svgOverlay.enable();
+      } else {
+        this.svgOverlay.checkToRemoveFocus();
+      }
+    },
+
+    enterEditAnnotation: function() {
       this.osdViewer.setMouseNavEnabled(false);
       this.svgOverlay.show();
       this.svgOverlay.enableEdit();
+    },
+
+    enterDefault: function() {
+      this.exitEditMode(false);
     },
 
     exitEditMode: function(showAnnotations) {
@@ -53,36 +76,38 @@
       }
     },
 
-    render: function() {
+    render: function () {
 
+      if(this.parent.mode !== $.AnnotationsLayer.DISPLAY_ANNOTATIONS){
+        return ;
+      }
       this.svgOverlay.restoreEditedShapes();
       this.svgOverlay.paperScope.activate();
       this.svgOverlay.paperScope.project.clear();
       var _this = this;
       _this.annotationsToShapesMap = {};
-      var deferreds = jQuery.map(this.list, function(annotation) {
-        var deferred = jQuery.Deferred(),
-        shapeArray;
+
+      for (var i = 0; i < this.list.length; i++) {
+        var shapeArray;
+        var annotation = this.list[i];
         if (annotation.on && typeof annotation.on === 'object') {
           if (!annotation.on.selector) {
-            return deferred;
+            continue;
           } else if (annotation.on.selector.value.indexOf('<svg') !== -1) {
             shapeArray = _this.svgOverlay.parseSVG(annotation.on.selector.value, annotation);
-          } else {
+          } else if (annotation.on.selector.value.indexOf('xywh=') !== -1) {
             shapeArray = _this.parseRectangle(annotation.on.selector.value, annotation);
+          } else {
+           continue;
           }
-        } else if (annotation.on && typeof annotation.on === 'string') {
+        } else if (annotation.on && typeof annotation.on === 'string' && annotation.on.indexOf('xywh=') !== -1) {
           shapeArray = _this.parseRectangle(annotation.on, annotation);
         } else {
-          return deferred;
+          continue;
         }
         _this.svgOverlay.restoreLastView(shapeArray);
         _this.annotationsToShapesMap[annotation['@id']] = shapeArray;
-        return deferred;
-      });
-      jQuery.when.apply(jQuery, deferreds).done(function() {
-        _this.eventEmitter.publish('overlaysRendered.' + _this.windowId);
-      });
+      }
 
       var windowElement = _this.state.getWindowElement(_this.windowId);
       this.annoTooltip = new $.AnnotationTooltip({
@@ -96,8 +121,8 @@
         viewport: windowElement,
         getAnnoFromRegion: _this.getAnnoFromRegion.bind(this)
       });
-      console.log(this.svgOverlay.paperScope.view.zoom);
       this.svgOverlay.paperScope.view.draw();
+      _this.eventEmitter.publish('annotationsRendered.' + _this.windowId);
     },
 
     parseRectangle: function(rectString, annotation) {
@@ -108,10 +133,8 @@
         'width': parseInt(shapeArray[2]),
         'height': parseInt(shapeArray[3])
       };
-      var canvas = this.manifestor.getState().canvasObjects[this.canvasId],
-      coords = canvas.canvasToWorldCoordinates(shape),
-      rect = new OpenSeadragon.Rect(coords.x, coords.y, coords.width, coords.height);
-      return this.svgOverlay.createRectangle(rect, annotation);
+
+      return this.svgOverlay.createRectangle(shape, annotation);
     },
 
     showTooltipsFromMousePosition: function(event, location, absoluteLocation) {
@@ -182,14 +205,8 @@
 
       _this.osdViewer.addHandler('close', this._thisDestroy);
 
-      this.eventsSubscriptions.push(_this.eventEmitter.subscribe('refreshOverlay.' + _this.windowId, function(event) {
-        _this.eventEmitter.publish('modeChange.' + _this.windowId, 'displayAnnotations');
-        // return to pointer mode
-        _this.eventEmitter.publish('SET_STATE_MACHINE_POINTER.' + _this.windowId);
-        _this.svgOverlay.restoreEditedShapes();
-        _this.svgOverlay.deselectAll();
-        _this.svgOverlay.mode = '';
-        _this.render();
+      this.eventsSubscriptions.push(this.eventEmitter.subscribe('DESTROY_EVENTS.'+this.windowId, function(event) {
+        _this.destroy();
       }));
 
       this.eventsSubscriptions.push(_this.eventEmitter.subscribe('updateTooltips.' + _this.windowId, function(event, location, absoluteLocation) {
@@ -245,6 +262,10 @@
           }
         });
         _this.svgOverlay.paperScope.view.draw();
+      }));
+
+      this.eventsSubscriptions.push(_this.eventEmitter.subscribe('refreshOverlay.' + _this.windowId, function (event) {
+        _this.render();
       }));
     },
 

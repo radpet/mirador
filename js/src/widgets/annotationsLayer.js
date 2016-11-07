@@ -5,7 +5,6 @@
     jQuery.extend(true, this, {
       annotationsList:   null,
       viewer:            null,
-      manifestor:        null,
       drawTool:          null,
       selected:          null,
       hovered:           null,
@@ -17,6 +16,8 @@
 
     this.init();
   };
+
+  $.AnnotationsLayer.DISPLAY_ANNOTATIONS = 'displayAnnotations';
 
   $.AnnotationsLayer.prototype = {
 
@@ -61,22 +62,22 @@
         ],
         callbacks: {
           onstartup: function(event) {
-            _this.enterDefault();
+            _this.drawTool.enterDefault();
           },
           ondefaultState: function(event) {
-            _this.enterDefault();
+            _this.drawTool.enterDefault();
           },
           ondisplayAnnotations: function(event) {
-            _this.enterDisplayAnnotations();
+            _this.drawTool.enterDisplayAnnotations();
           },
           oncreateAnnotation: function(event) {
-            _this.enterCreateAnnotation();
+            _this.drawTool.enterCreateAnnotation();
           },
           oncreateShape: function(event) {
-            _this.enterCreateShape();
+            _this.drawTool.enterCreateShape();
           },
           oneditAnnotation: function(event) {
-            _this.enterEditAnnotation();
+            _this.drawTool.enterEditAnnotation();
           }
         }
       });
@@ -86,8 +87,6 @@
       var _this = this;
       this.drawTool = new $.OsdRegionDrawTool({
         osdViewer: _this.viewer,
-        manifestor: _this.manifestor,
-        canvasId: _this.canvasId,
         parent: _this,
         list: _this.annotationsList, // must be passed by reference.
         visible: false,
@@ -104,8 +103,12 @@
     },
 
     modeSwitch: function() {
-      if (this.mode === 'displayAnnotations') { this.layerState.displayAnnotations(); }
-      else if (this.mode === 'editingAnnotation') { this.layerState.editAnnotation(); }
+      if (this.mode === 'displayAnnotations') {
+        this.layerState.displayAnnotations();
+      }
+      else if (this.mode === 'editingAnnotation') {
+        this.layerState.editAnnotation();
+      }
       else if (this.mode === 'creatingAnnotation') {
         if (this.layerState.current !== 'edit') {
           this.layerState.createAnnotation();
@@ -113,30 +116,10 @@
           this.layerState.createShape();
         }
       }
-      else if (this.mode === 'default') { this.layerState.defaultState(); }
+      else if (this.mode === 'default') {
+        this.layerState.defaultState();
+      }
       else {}
-    },
-
-    enterDisplayAnnotations: function() {
-      this.drawTool.exitEditMode(true);
-      this.drawTool.render();
-    },
-
-    enterCreateAnnotation: function() {
-      this.drawTool.enterCreateMode();
-      this.drawTool.render();
-    },
-
-    enterCreateShape: function() {
-      this.drawTool.enterCreateShapeMode();
-    },
-
-    enterEditAnnotation: function() {
-      this.drawTool.enterEditMode();
-    },
-
-    enterDefault: function() {
-      this.drawTool.exitEditMode(false);
     }
   };
 
