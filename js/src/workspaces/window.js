@@ -68,38 +68,42 @@
   $.Window.prototype = {
     init: function () {
       var _this = this,
-          manifest = _this.manifest.jsonLd;
+      manifest = _this.manifest.jsonLd,
+      focusState = _this.viewType,
+      templateData = {};
 
-      // make sure annotations list is cleared out when changing objects within window
+      this.events = [];
+
+      //make sure annotations list is cleared out when changing objects within window
       while(_this.annotationsList.length > 0) {
         _this.annotationsList.pop();
       }
-      // unsubscribe from stale events as they will be updated with new module calls
+      //unsubscribe from stale events as they will be updated with new module calls
       _this.eventEmitter.unsubscribe(('currentCanvasIDUpdated.' + _this.id));
+      //make sure annotation-related events are destroyed so things work properly as we switch between objects
+      _this.eventEmitter.publish('DESTROY_EVENTS.'+_this.id);
 
       _this.removeBookView();
 
-      //reset imagemodes and then remove any imageModes that are not available as a mode
+      //reset imagemodes and then remove any imageModes that are not available as a focus
       this.imageModes = this.originalImageModes;
       this.imageModes = jQuery.map(this.imageModes, function(value, index) {
         if (jQuery.inArray(value, _this.modes) === -1) return null;
         return value;
       });
 
-      //get the master list of images and set current canvas ID if we don't have one
       _this.imagesList = _this.manifest.getCanvases();
       if (!_this.canvasID) {
         _this.canvasID = _this.imagesList[0]['@id'];
       }
 
-      // check if we have an annotation endpoint and if the annotation layer is available
       this.annoEndpointAvailable = !jQuery.isEmptyObject(_this.state.getStateProperty('annotationEndpoint'));
       if (!this.canvasControls.annotations.annotationLayer) {
         this.canvasControls.annotations.annotationCreation = false;
         this.annoEndpointAvailable = false;
-        this.canvasControls.annotations.annotationState = 'annoOff';
+        this.canvasControls.annotations.annotationState = 'off';
       }
-      _this.getAnnotations(); // we only need to call this if we need to display annotations in the app. be smarter here
+      _this.getAnnotations();
 
       // if manipulationLayer is true,  but all individual options are set to false, set manipulationLayer to false
       if (this.canvasControls.imageManipulation.manipulationLayer) {
@@ -121,8 +125,78 @@
         });
       }
 
-      _this.setTemplateData();
-      _this.setTooltipContent();
+      templateData.sidePanel = this.sidePanelAvailable;
+      if (this.sidePanelAvailable) {
+        templateData.sidePanel = !Object.keys(this.sidePanelOptions).every(function(element, index, array) {
+          return _this.sidePanelOptions[element] === false;
+        });
+      }
+      if (typeof this.overlayAvailable !== 'undefined' && !this.overlayAvailable) {
+        jQuery.each(this.focusOverlaysAvailable, function(key, value) {
+          _this.focusOverlaysAvailable[key].overlay = {'' : false};
+        });
+      } else {
+        templateData.MetadataView = true;
+      }
+
+      //determine if any buttons should be hidden in template
+      templateData.iconClasses = {};
+      jQuery.each(this.focuses, function(index, value) {
+        templateData[value] = true;
+        templateData.iconClasses[value] = _this.iconClasses[value];
+      });
+      templateData.title = $.JsonLd.getTextValue(manifest.label);
+      templateData.displayLayout = this.displayLayout;
+      templateData.layoutOptions = this.layoutOptions;
+      // if displayLayout is true,  but all individual options are set to false, set displayLayout to false
+      if (this.displayLayout) {
+        templateData.displayLayout = !Object.keys(this.layoutOptions).every(function(element, index, array) {
+          return _this.layoutOptions[element] === false;
+        });
+      }
+      templateData.currentFocusClass = _this.iconClasses[_this.viewType];
+      templateData.showFullScreen = _this.fullScreen;
+      _this.element = jQuery(this.template(templateData)).appendTo(_this.appendTo);
+      this.element.find('.manifest-info .mirador-tooltip').each(function() {
+        jQuery(this).qtip({
+          content: {
+            text: jQuery(this).attr('title'),
+          },
+          position: {
+            my: 'top center',
+            at: 'bottom center',
+            adjust: {
+              method: 'shift',
+              y: -11
+            },
+            container: _this.element,
+            viewport: true
+          },
+          style: {
+            classes: 'qtip-dark qtip-shadow qtip-rounded'
+          }
+        });
+      });
+      //TODO: this needs to switch the position when it is a right to left manifest
+      this.element.find('.manifest-info .window-manifest-title').qtip({
+        content: {
+          text: jQuery(this).attr('title'),
+        },
+        position: {
+          my: 'top center',
+          at: 'bottom left',
+          adjust: {
+            method: 'shift',
+            x: 20,
+            y: 1
+          },
+          container: _this.element,
+          viewport: true
+        },
+        style: {
+          classes: 'qtip-dark qtip-shadow qtip-rounded'
+        }
+      });
       _this.eventEmitter.publish('WINDOW_ELEMENT_UPDATED', {windowId: _this.id, element: _this.element});
 
       //clear any existing objects
@@ -164,6 +238,21 @@
         this.bottomPanelVisibility(this.bottomPanelVisible);
       }
       this.sidePanelVisibility(this.sidePanelVisible, '0s');
+
+      this.events.push(this.eventEmitter.subscribe('windowRemoved',function(event,id){
+        if(_this.id === id){
+          _this.destroy();
+        }
+      }));
+    },
+
+    destroy:function(){
+      var _this = this;
+      this.events.forEach(function(event){
+        _this.eventEmitter.unsubscribe(event.name,event.handler);
+      });
+
+      this.element.remove();
     },
 
     update: function(options) {
@@ -201,73 +290,73 @@
         }
       });
 
-      _this.eventEmitter.subscribe('HIDE_REMOVE_OBJECT.' + _this.id, function(event) {
+      _this.events.push(_this.eventEmitter.subscribe('HIDE_REMOVE_OBJECT.' + _this.id, function(event) {
         _this.element.find('.remove-object-option').hide();
-      });
+      }));
 
-      _this.eventEmitter.subscribe('SHOW_REMOVE_OBJECT.' + _this.id, function(event) {
+      _this.events.push(this.eventEmitter.subscribe('SHOW_REMOVE_OBJECT.' + _this.id, function(event) {
         _this.element.find('.remove-object-option').show();
-      });
+      }));
 
-      _this.eventEmitter.subscribe('sidePanelStateUpdated.' + this.id, function(event, state) {
+      _this.events.push(_this.eventEmitter.subscribe('sidePanelStateUpdated.' + this.id, function(event, state) {
         if (state.open) {
-          _this.element.find('.mirador-icon-toc').addClass('selected');
-          _this.element.find('.view-container').removeClass('maximised');
+            _this.element.find('.mirador-icon-toc').addClass('selected');
+            _this.element.find('.view-container').removeClass('maximised');
         } else {
-          _this.element.find('.mirador-icon-toc').removeClass('selected');
-          _this.element.find('.view-container').addClass('maximised');
+            _this.element.find('.mirador-icon-toc').removeClass('selected');
+            _this.element.find('.view-container').addClass('maximised');
         }
-      });
+      }));
 
       // TODO: temporary logic to minimize side panel if only tab is toc and toc is empty
-      _this.eventEmitter.subscribe('sidePanelVisibilityByTab.' + this.id, function(event, visible) {
+      _this.events.push(_this.eventEmitter.subscribe('sidePanelVisibilityByTab.' + this.id, function(event, visible) {
         _this.sidePanelVisibility(visible, '0s');
-      });
+      }));
 
-      _this.eventEmitter.subscribe('SET_CURRENT_CANVAS_ID.' + this.id, function(event, canvasID) {
+      _this.events.push(_this.eventEmitter.subscribe('SET_CURRENT_CANVAS_ID.' + this.id, function(event, canvasID) {
         _this.setCurrentCanvasID(canvasID);
-      });
+      }));
 
-      _this.eventEmitter.subscribe('REMOVE_CLASS.' + this.id, function(event, className) {
+      _this.events.push(_this.eventEmitter.subscribe('REMOVE_CLASS.' + this.id, function(event, className) {
         _this.element.find('.view-container').removeClass(className);
-      });
+      }));
 
-      _this.eventEmitter.subscribe('ADD_CLASS.' + this.id, function(event, className) {
+      _this.events.push(_this.eventEmitter.subscribe('ADD_CLASS.' + this.id, function(event, className) {
         _this.element.find('.view-container').addClass(className);
-      });
+      }));
 
-      _this.eventEmitter.subscribe('UPDATE_FOCUS_IMAGES.' + this.id, function(event, images) {
+      _this.events.push(_this.eventEmitter.subscribe('UPDATE_FOCUS_IMAGES.' + this.id, function(event, images) {
         _this.updateFocusImages(images.array);
-      });
+      }));
 
-      _this.eventEmitter.subscribe('HIDE_ICON_TOC.' + this.id, function(event) {
+      _this.events.push(_this.eventEmitter.subscribe('HIDE_ICON_TOC.' + this.id, function(event) {
         _this.element.find('.mirador-icon-toc').hide();
-      });
+      }));
 
-      _this.eventEmitter.subscribe('SHOW_ICON_TOC.' + this.id, function(event) {
+      _this.events.push(_this.eventEmitter.subscribe('SHOW_ICON_TOC.' + this.id, function(event) {
         _this.element.find('.mirador-icon-toc').show();
-      });
+      }));
 
-      _this.eventEmitter.subscribe('SET_BOTTOM_PANEL_VISIBILITY.' + this.id, function(event, visibility) {
+      _this.events.push(_this.eventEmitter.subscribe('SET_BOTTOM_PANEL_VISIBILITY.' + this.id, function(event, visibility) {
         if (typeof visibility !== 'undefined' && visibility !== null) {
           _this.bottomPanelVisibility(visibility);
         } else {
           _this.bottomPanelVisibility(_this.bottomPanelVisible);
         }
-      });
+      }));
 
-      _this.eventEmitter.subscribe('TOGGLE_BOTTOM_PANEL_VISIBILITY.' + this.id, function(event) {
+      _this.events.push(_this.eventEmitter.subscribe('TOGGLE_BOTTOM_PANEL_VISIBILITY.' + this.id, function(event) {
         var visible = !_this.bottomPanelVisible;
         _this.bottomPanelVisibility(visible);
-      });
+      }));
 
-      _this.eventEmitter.subscribe('DISABLE_WINDOW_FULLSCREEN', function(event) {
+      _this.events.push(_this.eventEmitter.subscribe('DISABLE_WINDOW_FULLSCREEN', function(event) {
         _this.element.find('.mirador-osd-fullscreen').hide();
-      });
+      }));
 
-      _this.eventEmitter.subscribe('ENABLE_WINDOW_FULLSCREEN', function(event) {
+      _this.events.push(_this.eventEmitter.subscribe('ENABLE_WINDOW_FULLSCREEN', function(event) {
         _this.element.find('.mirador-osd-fullscreen').show();
-      });
+      }));
     },
 
     bindEvents: function() {
@@ -302,39 +391,37 @@
 
     bindAnnotationEvents: function() {
       var _this = this;
-      _this.eventEmitter.subscribe('annotationCreated.'+_this.id, function(event, oaAnno, osdOverlay) {
+      _this.eventEmitter.subscribe('annotationCreated.'+_this.id, function(event, oaAnno, eventCallback) {
         var annoID;
         //first function is success callback, second is error callback
         _this.endpoint.create(oaAnno, function(data) {
           //the success callback expects the OA annotation be returned
           annoID = String(data['@id']); //just in case it returns a number
           _this.annotationsList.push(data);
-          //update overlay so it can be a part of the annotationList rendering
-          jQuery(osdOverlay).removeClass('osd-select-rectangle').addClass('annotation').attr('id', annoID);
           _this.eventEmitter.publish('ANNOTATIONS_LIST_UPDATED', {windowId: _this.id, annotationsList: _this.annotationsList});
+          //anything that depends on the completion of other bits, call them now
+          eventCallback();
         },
-                              function() {
-                                //provide useful feedback to user
-                                console.log("There was an error saving this new annotation");
-                                //remove this overlay because we couldn't save annotation
-                                jQuery(osdOverlay).remove();
-                              });
+        function() {
+          //provide useful feedback to user
+          console.log("There was an error saving this new annotation");
+        });
       });
 
       _this.eventEmitter.subscribe('annotationUpdated.'+_this.id, function(event, oaAnno) {
         //first function is success callback, second is error callback
-        _this.endpoint.update(oaAnno, function() {
+        _this.endpoint.update(oaAnno, function(data) {
           jQuery.each(_this.annotationsList, function(index, value) {
-            if (value['@id'] === oaAnno['@id']) {
-              _this.annotationsList[index] = oaAnno;
+            if (value['@id'] === data['@id']) {
+              _this.annotationsList[index] = data;
               return false;
             }
           });
           _this.eventEmitter.publish('ANNOTATIONS_LIST_UPDATED', {windowId: _this.id, annotationsList: _this.annotationsList});
         },
-                              function() {
-                                console.log("There was an error updating this annotation");
-                              });
+        function() {
+          console.log("There was an error updating this annotation");
+        });
       });
 
       _this.eventEmitter.subscribe('annotationDeleted.'+_this.id, function(event, annoId) {
@@ -345,9 +432,9 @@
           _this.eventEmitter.publish(('removeOverlay.' + _this.id), annoId);
           _this.eventEmitter.publish('ANNOTATIONS_LIST_UPDATED', {windowId: _this.id, annotationsList: _this.annotationsList});
         },
-                                        function() {
-                                          // console.log("There was an error deleting this annotation");
-                                        });
+        function() {
+          // console.log("There was an error deleting this annotation");
+        });
       });
 
       _this.eventEmitter.subscribe('updateAnnotationList.'+_this.id, function(event) {
@@ -381,16 +468,16 @@
 
       if (this.sidePanel === null) {
         this.sidePanel = new $.SidePanel({
-          windowId: _this.id,
-          state: _this.state,
-          eventEmitter: _this.eventEmitter,
-          appendTo: _this.element.find('.sidePanel'),
-          manifest: _this.manifest,
-          canvasID: _this.canvasID,
-          layersTabAvailable: layersTabAvailable,
-          tocTabAvailable: tocAvailable,
-          annotationsTabAvailable: annotationsTabAvailable,
-          hasStructures: hasStructures
+              windowId: _this.id,
+              state: _this.state,
+              eventEmitter: _this.eventEmitter,
+              appendTo: _this.element.find('.sidePanel'),
+              manifest: _this.manifest,
+              canvasID: _this.canvasID,
+              layersTabAvailable: layersTabAvailable,
+              tocTabAvailable: tocAvailable,
+              annotationsTabAvailable: annotationsTabAvailable,
+              hasStructures: hasStructures
         });
       } else {
         this.sidePanel.update('annotations', annotationsTabAvailable);
@@ -572,34 +659,38 @@
     },
 
     /*
-     Merge all annotations for current image/canvas from various sources
-     Pass to any widgets that will use this list
-     */
+       Merge all annotations for current image/canvas from various sources
+       Pass to any widgets that will use this list
+       */
     getAnnotations: function() {
       //first look for manifest annotations
       var _this = this,
-          url = _this.manifest.getAnnotationsListUrl(_this.canvasID);
+      urls = _this.manifest.getAnnotationsListUrls(_this.canvasID);
 
-      if (url !== false) {
-        jQuery.get(url, function(list) {
-          _this.annotationsList = _this.annotationsList.concat(list.resources);
-          jQuery.each(_this.annotationsList, function(index, value) {
-            //if there is no ID for this annotation, set a random one
-            if (typeof value['@id'] === 'undefined') {
-              value['@id'] = $.genUUID();
-            }
-            //indicate this is a manifest annotation - which affects the UI
-            value.endpoint = "manifest";
+      if (urls.length !== 0) {
+        jQuery.each(urls, function(index, url) {
+          jQuery.get(url, function(list) {
+            var annotations = list.resources;
+            jQuery.each(annotations, function(index, value) {
+              //if there is no ID for this annotation, set a random one
+              if (typeof value['@id'] === 'undefined') {
+                value['@id'] = $.genUUID();
+              }
+              //indicate this is a manifest annotation - which affects the UI
+              value.endpoint = "manifest";
+            });
+            // publish event only if one url fetch is successful
+            _this.annotationsList = _this.annotationsList.concat(annotations);
+            _this.eventEmitter.publish('ANNOTATIONS_LIST_UPDATED', {windowId: _this.id, annotationsList: _this.annotationsList});
           });
-          _this.eventEmitter.publish('ANNOTATIONS_LIST_UPDATED', {windowId: _this.id, annotationsList: _this.annotationsList});
         });
       }
 
       // next check endpoint
       if (this.annoEndpointAvailable) {
         var dfd = jQuery.Deferred(),
-            module = _this.state.getStateProperty('annotationEndpoint').module,
-            options = _this.state.getStateProperty('annotationEndpoint').options || {}; //grab anything from the config that should be passed directly to the endpoint
+        module = _this.state.getStateProperty('annotationEndpoint').module,
+        options = _this.state.getStateProperty('annotationEndpoint').options || {}; //grab anything from the config that should be passed directly to the endpoint
         options.name = _this.state.getStateProperty('annotationEndpoint').name;
         // One annotation endpoint per window, the endpoint
         // is a property of the instance.

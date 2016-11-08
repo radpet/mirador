@@ -41,7 +41,8 @@ module.exports = function(grunt) {
     'js/lib/paper-full.min.js',
     'js/lib/spectrum.js',
     'js/lib/i18next.min.js',
-    'js/lib/manifestLayouts.js'
+    'js/lib/manifestLayouts.js',
+    'js/lib/modernizr.custom.js'
   ],
 
   // libraries/plugins for running tests
