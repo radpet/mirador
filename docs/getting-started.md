@@ -22,7 +22,7 @@ To initialize Mirador, it needs to be attached to an existing HTML **div** throu
       }
     </style>
     <link rel="stylesheet" type="text/css" href="build/mirador/css/mirador-combined.css">
-    <script src="build/mirador/mirador.js"></script>
+    <script src="build/mirador/mirador.min.js"></script>
   </head>
   <body>
     <div id="viewer"></div>
