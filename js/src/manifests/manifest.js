@@ -1,12 +1,13 @@
-(function($){
+(function ($) {
 
-  $.Manifest = function(manifestUri, location, manifestContent) {
+  $.Manifest = function (manifestUri, location, manifestContent) {
+    console.log(manifestUri, location, manifestContent);
     if (manifestContent) {
       jQuery.extend(true, this, {
-          jsonLd: null,
-          location: location,
-          uri: manifestUri,
-          request: null
+        jsonLd: null,
+        location: location,
+        uri: manifestUri,
+        request: null
       });
       this.initFromManifestContent(manifestContent);
     } else if (manifestUri.indexOf('info.json') !== -1) {
@@ -48,41 +49,58 @@
   };
 
   $.Manifest.prototype = {
-    init: function(manifestUri) {
+    init: function (manifestUri) {
       var _this = this;
-      this.request = jQuery.ajax({
-        url: manifestUri,
-        dataType: 'json',
-        async: true
-      });
-
-      this.request.done(function(jsonLd) {
-        _this.jsonLd = jsonLd;
+      this.request = Manifesto.loadManifest(manifestUri).then(function (manifest) {
+        _this.manifest = Manifesto.create(manifest);
+        console.log(_this.manifest.getLabel());
+        _this.jsonLd = JSON.parse(manifest);
       });
     },
-    initFromInfoJson: function(infoJsonUrl) {
+    getId: function () {
+      return this.manifest.id;
+    },
+    getLabel: function () {
+      return this.manifest.getLabel()[0].value;
+    },
+    getManifest: function () {
+      return this.manifest;
+    },
+    initFromInfoJson: function (infoJsonUrl) {
       var _this = this;
-      this.request = jQuery.ajax({
-        url: infoJsonUrl,
-        dataType: 'json',
-        async: true
+      // this.request = jQuery.ajax({
+      //   url: infoJsonUrl,
+      //   dataType: 'json',
+      //   async: true
+      // });
+
+      this.request = Manifold.loadManifest({
+        iiifResourceUri: 'infoJsonUrl',
+        collectionIndex: 0,
+        manifestIndex: 0,
+        sequenceIndex: 0,
+        canvasIndex: 0
+      }).then(function (helper) {
+      }).catch(function () {
+        console.error('failed to load manifest');
       });
-      this.request.done(function(jsonLd) {
+
+      this.request.done(function (jsonLd) {
         _this.jsonLd = _this.generateInfoWrapper(jsonLd);
       });
     },
     initFromManifestContent: function (manifestContent) {
       var _this = this;
       this.request = jQuery.Deferred();
-      this.request.done(function(jsonLd) {
+      this.request.done(function (jsonLd) {
         _this.jsonLd = jsonLd;
       });
       _this.request.resolve(manifestContent); // resolve immediately
     },
-    getThumbnailForCanvas : function(canvas, width) {
+    getThumbnailForCanvas: function (canvas, width) {
       var version = "1.1",
-      service,
-      thumbnailUrl;
+          service,
+          thumbnailUrl;
 
       // Ensure width is an integer...
       width = parseInt(width, 10);
@@ -113,7 +131,7 @@
       }
       return thumbnailUrl;
     },
-    getVersion: function() {
+    getVersion: function () {
       var versionMap = {
         'http://www.shared-canvas.org/ns/context.json': '1', // is this valid?
         'http://iiif.io/api/presentation/1/context.json': '1',
@@ -122,16 +140,20 @@
       };
       return versionMap[this.jsonLd['@context']];
     },
-    getCanvases : function() {
+    getCanvases: function () {
       var _this = this;
-      return _this.jsonLd.sequences[0].canvases;
+      return _this.manifest.getSequenceByIndex(0).getCanvases().map(function(canvas){
+        return canvas.__jsonld;
+      });
+     // return _this.jsonLd.sequences[0].canvases;
     },
-    getAnnotationsListUrls: function(canvasId) {
+    getAnnotationsListUrls: function (canvasId) {
       var _this = this;
-      var canvas = jQuery.grep(_this.getCanvases(), function(canvas, index) {
-        return canvas['@id'] === canvasId;
-      })[0],
-      annotationsListUrls = [];
+      console.log(_this.getCanvases());
+      var canvas = jQuery.grep(_this.getCanvases(), function (canvas, index) {
+            return canvas['@id'] === canvasId;
+          })[0],
+          annotationsListUrls = [];
 
       if (canvas && canvas.otherContent) {
         for (var i = 0; i < canvas.otherContent.length; i++) {
@@ -140,11 +162,11 @@
       }
       return annotationsListUrls;
     },
-    getStructures: function() {
+    getStructures: function () {
       var _this = this;
       return _this.jsonLd.structures;
     },
-    generateInfoWrapper: function(infoJson) {
+    generateInfoWrapper: function (infoJson) {
       // Takes in info.json and creates the
       // dummy manifest wrapper around it
       // that will allow it to behave like a
@@ -156,7 +178,7 @@
         '@context': "http://www.shared-canvas.org/ns/context.json",
         '@id': infoJson['@id'],
         '@type': 'sc:Manifest',
-        label: infoJson['@id'].split('/')[infoJson['@id'].split('/').length -1],
+        label: infoJson['@id'].split('/')[infoJson['@id'].split('/').length - 1],
         sequences: [
           {
             '@id': infoJson['@id'] + '/sequence/1',

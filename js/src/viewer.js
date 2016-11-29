@@ -282,7 +282,7 @@
       if (!_this.state.getStateProperty('manifests')[url]) {
         manifest = new $.Manifest(url, location, content);
         _this.eventEmitter.publish('manifestQueued', manifest, location);
-        manifest.request.done(function() {
+        manifest.request.then(function() {
           _this.eventEmitter.publish('manifestReceived', manifest);
         });
       }
