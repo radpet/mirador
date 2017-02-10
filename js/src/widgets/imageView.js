@@ -549,7 +549,7 @@
         .appendTo(_this.element);
       console.log(this.manifest.jsonLd.sequences[0]);
       var seq = this.manifest.jsonLd.sequences[0];
-      seq.canvases = [seq.canvases[this.currentImgIndex]];
+      //seq.canvases = [seq.canvases[this.currentImgIndex]];
       var infoJsonUrl = imageUrl + '/info.json';
       var uniqueID = $.genUUID();
       var osdID = 'mirador-osd-' + uniqueID;
@@ -588,13 +588,24 @@
       _this.magic.on('viewer-state-updated', function () {
         console.log('I have updated!');
       });
-      console.log(_this.osd);
-      console.log(_this.magic);
-      console.log(_this.magic.getSelectedCanvas());
-      console.log(_this.magic.getState());
 
+      var selectedCanvas = _this.magic.getSelectedCanvas();
+      console.log(selectedCanvas);
+      var image = selectedCanvas.images[0];
+      console.log(image);
+      //image.setOpacity(1);
 
+      var image2 = selectedCanvas.images[1];
+      console.log(image2);
+      //image2.show();
 
+      //selectedCanvas.moveToIndex(image2,0);
+      selectedCanvas.moveToIndex(image,1);
+      image.hide();
+      image.setOpacity(0);
+     // selectedCanvas.moveToIndex(image2,0);
+      image2.setOpacity(1);
+//
 //
 //       jQuery.getJSON(infoJsonUrl).done(function (infoJson, status, jqXHR) {
 //         _this.elemOsd =
@@ -650,52 +661,52 @@
 // //          });
 // //        }
 //
-        setTimeout(function () {
-          console.log('OPENING');
-          _this.eventEmitter.publish('osdOpen.' + _this.windowId, [_this.osd, _this.canvasID]);
-          if (_this.osdOptions.osdBounds) {
-            var rect = new OpenSeadragon.Rect(_this.osdOptions.osdBounds.x, _this.osdOptions.osdBounds.y, _this.osdOptions.osdBounds.width, _this.osdOptions.osdBounds.height);
-            _this.osd.viewport.fitBounds(rect, true);
-          } else {
-            // else reset bounds for this image
-            _this.setBounds();
-          }
-
-          _this.addAnnotationsLayer(_this.elemAnno);
-
-          // get the state before resetting it so we can get back to that state
-          var originalState = _this.hud.annoState.current;
-          var selected = _this.element.find('.mirador-osd-edit-mode.selected');
-          var shape = null;
-          if (selected) {
-            shape = selected.find('.material-icons').html();
-          }
-          if (originalState === 'none') {
-            _this.hud.annoState.startup();
-          } else if (originalState === 'off' || _this.annotationState === 'off') {
-            //original state is off, so don't need to do anything
-          } else {
-            _this.hud.annoState.displayOff();
-          }
-
-          if (originalState === 'pointer' || _this.annotationState === 'on') {
-            _this.hud.annoState.displayOn();
-          } else if (originalState === 'shape') {
-            _this.hud.annoState.displayOn();
-            _this.hud.annoState.chooseShape(shape);
-          } else {
-            //original state is off, so don't need to do anything
-          }
-
-          _this.osd.addHandler('zoom', $.debounce(function () {
-            console.log('zooming');
-            _this.setBounds();
-          }, 500));
-
-          _this.osd.addHandler('pan', $.debounce(function () {
-            _this.setBounds();
-          }, 500));
-        },2000);
+//         setTimeout(function () {
+//           console.log('OPENING');
+//           _this.eventEmitter.publish('osdOpen.' + _this.windowId, [_this.osd, _this.canvasID]);
+//           if (_this.osdOptions.osdBounds) {
+//             var rect = new OpenSeadragon.Rect(_this.osdOptions.osdBounds.x, _this.osdOptions.osdBounds.y, _this.osdOptions.osdBounds.width, _this.osdOptions.osdBounds.height);
+//             _this.osd.viewport.fitBounds(rect, true);
+//           } else {
+//             // else reset bounds for this image
+//             _this.setBounds();
+//           }
+//
+//           _this.addAnnotationsLayer(_this.elemAnno);
+//
+//           // get the state before resetting it so we can get back to that state
+//           var originalState = _this.hud.annoState.current;
+//           var selected = _this.element.find('.mirador-osd-edit-mode.selected');
+//           var shape = null;
+//           if (selected) {
+//             shape = selected.find('.material-icons').html();
+//           }
+//           if (originalState === 'none') {
+//             _this.hud.annoState.startup();
+//           } else if (originalState === 'off' || _this.annotationState === 'off') {
+//             //original state is off, so don't need to do anything
+//           } else {
+//             _this.hud.annoState.displayOff();
+//           }
+//
+//           if (originalState === 'pointer' || _this.annotationState === 'on') {
+//             _this.hud.annoState.displayOn();
+//           } else if (originalState === 'shape') {
+//             _this.hud.annoState.displayOn();
+//             _this.hud.annoState.chooseShape(shape);
+//           } else {
+//             //original state is off, so don't need to do anything
+//           }
+//
+//           _this.osd.addHandler('zoom', $.debounce(function () {
+//             console.log('zooming');
+//             _this.setBounds();
+//           }, 500));
+//
+//           _this.osd.addHandler('pan', $.debounce(function () {
+//             _this.setBounds();
+//           }, 500));
+//         },2000);
 //       });
     },
 
