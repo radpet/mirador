@@ -38,6 +38,7 @@
 
       this.view = jQuery(this.render(this.model));
       this.attachViewEvents(this.view);
+      this.initLayoutEffectsSliders(this.view);
       this.counter = 0;
     },
     render: function (model) {
@@ -49,7 +50,15 @@
     attachViewEvents: function (element) {
       element.find('.layer-config').click(this.handleLayerConfigClick.bind(this));
       element.find('.layer-visible input').click(this.handleVisibilityClick.bind(this));
+      element.find('.layer-control.layer-effects input').click(this.handleLayerEffectsControl.bind(this));
       //  element.find('.layer-locked input').click(this.handleLockClick.bind(this));
+    },
+    initLayoutEffectsSliders: function (element) {
+      element.find('.layer-effects-container .layer-control-slider').slider({});
+    },
+    handleLayerEffectsControl: function () {
+      console.log('should find container');
+      this.view.find('.layer-effects-container').toggleClass('hide').toggleClass('show');
     },
     handleVisibilityClick: function () {
       if (this.model.isVisible()) {
@@ -76,17 +85,24 @@
       //'<div class="layer-locked"><input type="checkbox" name="" /><i class="fa fa-lock" aria-hidden="true"></i></div>',//fa-unlock
       '</div>',
       '<section class="main-section">',
-      '<div class="thumbnail-image"><img src="{{getThumbnail}}"></div>',
-      '<div class="content">',
-      '<div class="title"><span class="id">{{getTitle}}</span></div>',
-      '<div class="horizontal-menu">',
-      '<label class="layer-control layer-visible"><input type="checkbox" name="" checked /><i></i></label>',
-      '<label class="layer-control layer-lock"><input type="checkbox" name="" /><i></i></label>',
-      '<label class="layer-control layer-transform"><i class="fa fa-arrows-h" aria-hidden="true"></i></label>',
-      '<label class="layer-control layer-effects"><input type="checkbox" name="" checked /><i></i></label>',
-      '</div>',
-      '<div class="reset-button"><label class="layer-control layer-reset"><i class="fa fa-refresh" aria-hidden="true"></i></label></div>',
-      '</div>',
+        '<div class="clearfix">',
+          '<div class="thumbnail-image"><img src="{{getThumbnail}}"></div>',
+          '<div class="content">',
+          '<div class="title"><span class="id">{{getTitle}}</span></div>',
+          '<div class="horizontal-menu">',
+          '<label class="layer-control layer-visible"><input type="checkbox" name="" checked /><i></i></label>',
+          '<label class="layer-control layer-lock"><input type="checkbox" name="" /><i></i></label>',
+          '<label class="layer-control layer-transform"><i class="fa fa-arrows-h" aria-hidden="true"></i></label>',
+          '<label class="layer-control layer-effects"><input type="checkbox" name="" checked /><i></i></label>',
+          '</div>',
+          '<div class="reset-button"><label class="layer-control layer-reset"><i class="fa fa-refresh" aria-hidden="true"></i></label></div>',
+          '</div>',
+        '</div>',
+        '<div class="layer-effects-container hide">',
+          '<div class="layer-control-slider-container"><label><i class="fa fa-television"></i></label><div class="layer-control-slider opacity-slider"></div></div>',
+          '<div class="layer-control-slider-container"><label><i class="material-icons">brightness_6</i></label><div class="layer-control-slider brightness-slider"></div></div>',
+          '<div class="layer-control-slider-container"><label><i class="material-icons">wb_sunny</i></label><div class="layer-control-slider contrast-slider"></div></div>',
+        '</div>',
       '</section>',
       '</li>'
     ].join(''))

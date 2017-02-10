@@ -31,7 +31,7 @@
     position: relative;
     width: 100%;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    height: 64px;
+    min-height: 64px;
 }
 
 .layer .drag-handle {
@@ -65,6 +65,10 @@
 
 .layer .main-section {
 
+}
+
+.layer .hidden {
+    display: none;
 }
 
 /*Visible control*/
@@ -132,10 +136,47 @@
 
 .layer .horizontal-menu {
     margin-top: 8px;
+    float: left;
 }
 
 .layer .reset-button {
-    position: absolute;
-    right: 0px;
-    bottom: 5px;
+    float: right;
+    margin-top: 8px;
+}
+
+.layer-effects-container {
+    padding: 10px;
+}
+
+.layer-effects-container .layer-control-slider-container{
+    margin:5px;
+}
+
+.layer-effects-container .layer-control-slider {
+    height: 0.4em;
+    width:60%;
+    display:inline-block;
+    margin-left:5px;
+}
+
+.layer-effects-container .layer-control-slider .ui-slider-handle {
+    height: 0.5em;
+    width: 0.5em;
+    top: -0.1em;
+    margin-left: -0.3em;
+    cursor: pointer;
+}
+
+layer. .clearfix:before,
+layer. .clearfix:after {
+    content: "";
+    display: table;
+}
+
+layer. .clearfix:after {
+    clear: both;
+}
+
+layer. .clearfix {
+    zoom: 1; /* ie 6/7 */
 }
