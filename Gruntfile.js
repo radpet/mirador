@@ -30,7 +30,8 @@ module.exports = function (grunt) {
       'js/lib/state-machine.min.js',
       'js/lib/tinymce.min.js',
       'js/lib/handlebars.js',
-      'js/lib/openseadragon.js',
+      'js/lib/manifestor.js',
+      //'js/lib/openseadragon.js',
       'js/lib/openseadragon-scalebar.js',
       'js/lib/d3.v3.min.js',
       'js/lib/pubsub.min.js',
@@ -40,7 +41,8 @@ module.exports = function (grunt) {
       'js/lib/paper-core.min.js',
       'js/lib/spectrum.js',
       'js/lib/i18next.min.js',
-      'js/lib/modernizr.custom.js'
+      'js/lib/modernizr.custom.js',
+
     ],
 
     // source files
