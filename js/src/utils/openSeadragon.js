@@ -11,6 +11,7 @@
           blendTime: 0.1,
           alwaysBlend: false,
           prefixUrl: 'images/openseadragon/',
+          preserveImageSizeOnResize:true,
           showNavigationControl: false
         }, options)
     );
