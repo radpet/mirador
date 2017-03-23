@@ -73,7 +73,6 @@
       this.eventEmitter.publish(this.windowId + ':layers-remove-resource', [this.imageResource]);
     },
     destroy: function () {
-      console.log('Should unsubscribe from all event emitter events');
       this.view.remove();
     },
     initLayoutEffectsSliders: function (element) {
@@ -103,7 +102,6 @@
       this.eventEmitter.publish(this.windowId + ':layers-lock-resource', [this.imageResource]);
     },
     handleLayerConfigClick: function () {
-      console.log('LayerConfigMenuShouldOpen');
     },
     onTransformModeEnabled: function () {
       this.disableControls();
@@ -146,10 +144,10 @@
       '<div class="title"><span  title="{{getTitle}}" class="id">{{getTitle}}</span></div>',
       '<div class="horizontal-menu">',
       '<label class="layer-control layer-visible"><input type="checkbox" name="" checked /><i></i></label>',
-      '<label class="layer-control layer-lock"><input type="checkbox" {{#if isLocked }} checked{{/if}} {{#if isHardLocked}}disabled="disabled"{{/if}} name="" /><i></i></label>',
+      '<label class="layer-control layer-lock {{#if isHardLocked}}disabled{{/if}}"><input type="checkbox" {{#if isLocked }} checked{{/if}} {{#if isHardLocked}}disabled="disabled"{{/if}} name="" /><i></i></label>',
       '<label class="layer-control layer-transform {{#if isHardLocked}}disabled{{/if}} "><i class="fa fa-crop" aria-hidden="true"></i></label>',
       '<label class="layer-control layer-effects"><input type="checkbox" name="" checked /><i></i></label>',
-      '<label class="layer-control layer-remove"><i class="fa fa-times" aria-hidden="true"></i></label>',
+      '<label class="layer-control layer-remove  {{#if isHardLocked}}disabled{{/if}}"><i class="fa fa-times" aria-hidden="true"></i></label>',
       '</div>',
       // '<div class="reset-button"><label class="layer-control layer-reset"><i class="fa fa-refresh" aria-hidden="true"></i></label></div>',
       '</div>',

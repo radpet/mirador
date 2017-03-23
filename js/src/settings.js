@@ -192,7 +192,7 @@
     },
 
     'layersSettings':{
-      'enabled':'false',
+      'enabled': false,
       'initialImageStrategy':{
         'module':'DefaultInitialImageStrategy'
       }

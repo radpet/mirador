@@ -29,10 +29,10 @@
       };
 
       this.events = [];
-      console.log('subscribing', this.windowId + ':image-resource-tile-source-opened');
+
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':image-resource-tile-source-opened', function (event, data) {
         var imageResource = data.detail;
-        console.log('imageResourceLoaded', imageResource);
+
 
         var layer = new $.Layer({
           windowId: _this.windowId,
@@ -43,7 +43,7 @@
       }));
 
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':layers-resource-removed', function (event, resource) {
-        console.log('Should remove find and remove the layer + maybe adjust zIndex');
+
         var indexToRemove;
         _this.layers.forEach(function (layer, index) {
           if (layer.model.getId() === resource.getId()) {
@@ -92,7 +92,7 @@
               callback: function () {
                 jQuery('.add-image-as-layer').data('picker').destroy();
                 dialog.modal('hide');
-                console.log(dialog);
+
               }
             }
           }
@@ -101,12 +101,12 @@
           jQuery('.add-image-as-layer').imagepicker();
           var picker = jQuery('.thumbnails.image_picker_selector');
 
-          //hope to not leak;
-          picker.imagesLoaded(function () {
-            picker.masonry({
-              itemSelector: '.thumbnail'
-            });
-          });
+          // //hope to not leak;
+          // picker.imagesLoaded(function () {
+          //   picker.masonry({
+          //     itemSelector: '.thumbnail'
+          //   });
+          // });
 
         });
       });
@@ -123,14 +123,13 @@
       return this.manifest.getCanvases()[$.getImageIndexById(this.manifest.getCanvases(), this.canvasID)];
     },
     render: function (tmplOpts) {
-      console.log('Rendering layers tab component');
+
       var _this = this;
       this.element = jQuery(this.template(tmplOpts));
       this.view = this.element.find('ul');
 
     },
     addLayer: function (layer) {
-      console.log('adding layer');
       this.layers.push(layer);
       this.idToLayer[layer.imageResource.id] = layer;
       this.addLayerView(layer);
@@ -159,18 +158,15 @@
       });
     },
     onSortableListUpdated: function (el) {
-      console.log("List is being reordered");
       var updatedList = jQuery(el).sortable('toArray');
       updatedList.reverse();
       this.updateLayersPosition(updatedList);
-      console.log('Model after reorder', this.layers);
       this.eventEmitter.publish(this.windowId + ':layers-zIndex-updated');
     },
     //somebody else should handle this, but for now lets put it here
     updateLayersPosition: function (layers) {
       var _this = this;
 
-      console.log(layers, layers.length, this.layers.length);
 
       var currentIds = this.layers.map(function (layer) {
         return layer.model.getId();
@@ -181,7 +177,7 @@
       var firstDiff = -1;
       var i;
       for (i = 0; i < this.layers.length; i++) {
-        console.log(currentIds[i], 'vs', layers[i]);
+
         if (currentIds[i] !== layers[i]) {
           firstDiff = i;
           break;
@@ -190,7 +186,6 @@
 
       for (i = firstDiff; i < this.layers.length; i++) {
         this.layers[i] = this.idToLayer[layers[i]];
-        console.log(layers[i]);
         // reverse them
         this.layers[i].imageResource.zIndex = i;
 

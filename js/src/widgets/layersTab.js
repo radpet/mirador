@@ -15,10 +15,8 @@
 
   $.LayersTab.prototype = {
     init: function() {
-      //console.log('LayersTab',this);
-    //  console.log('LayersTab:Manifest',this.manifest.getCanvases());
       var _this = this;
-      console.log(this.windowId);
+
       this.localState({
         id: 'layersTab',
         visible: this.visible,
@@ -93,7 +91,7 @@
       });
 
       _this.eventEmitter.subscribe('currentCanvasIDUpdated.' + _this.windowId, function(event, canvasID) {
-       // console.log(canvasID);
+
         //update layers for this canvasID
         if(_this.layers){
           _this.layers.destroy();

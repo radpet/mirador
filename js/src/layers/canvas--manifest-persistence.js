@@ -15,7 +15,6 @@
     init: function () {
     },
     persistCanvas: function () {
-      console.log('Should persist the layer/s model to the manifest');
     }
   };
 

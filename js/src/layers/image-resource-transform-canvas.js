@@ -5,6 +5,7 @@
       osd: null,
       eventEmitter: null,
       windowId: null,
+      state: null
     }, options);
 
     this.init();
@@ -26,14 +27,6 @@
       }
       this.enabled = true;
       this.currentImageResource = imageResource;
-      // var _resize = this.resize.bind(this, imageResource.tiledImage);
-      // this.osd.addHandler('animation', _resize);
-      // this.osd.addHandler('open', _resize);
-      // this.osd.addHandler('animation-finish', _resize);
-      // this.osd.addHandler('update-viewport', _resize);
-      // this.osd.addHandler('resize', _resize);
-      // this.osd.addHandler('rotate', _resize);
-      // this.osd.addHandler('constrain', _resize);
 
 
       var homeBounds = this.osd.viewport.getHomeBounds();
@@ -49,7 +42,7 @@
 
       //too hacked create a parser
       var version = $.Iiif.getVersionFromContext(imageResource.imageInIIIF.resource.service['@context']);
-      var url = $.Iiif.getThumbnailForImage(imageResource.imageInIIIF,1024);
+      var url = $.Iiif.getThumbnailForImage(imageResource.imageInIIIF, 1024);
 
       var _this = this;
       var raster = new this.paperScope.Raster({
@@ -88,7 +81,7 @@
 
         if (raster.data.rotationIcon) {
           raster.data.rotation = imageResource.getRotation();
-          raster.data.rotationIcon.addData('pivot', raster.bounds.getCenter() );
+          raster.data.rotationIcon.addData('pivot', raster.bounds.getCenter());
           raster.data.rotationIcon.addData('type', 'rotationIcon');
           raster.data.rotationIcon.addData('self', raster.data.rotationIcon);
           raster.data.rotationIcon.addData('parent', raster);
@@ -114,7 +107,7 @@
         rotation = rotation * (180 / Math.PI);
         raster.data.group.rotate(rotation, raster.position);
         raster.data.rotationIcon.rotate(-rotation);
-        imageResource.rotate(rotation,true);
+        imageResource.rotate(rotation, true);
       };
 
       raster.onMouseDrag = function (event) {
@@ -175,8 +168,8 @@
         this.paperScope.view.viewSize = new this.paperScope.Size(this.canvas.width, this.canvas.height);
         this.paperScope.view.zoom = tiledImage.viewportToImageZoom(this.osd.viewport.getZoom(true));
         this.paperScope.view.center = new this.paperScope.Size(
-          tiledImage.source.dimensions.x * viewportBounds.x + this.paperScope.view.bounds.width / 2,
-          tiledImage.source.dimensions.y * viewportBounds.y + this.paperScope.view.bounds.height / 2);
+            tiledImage.source.dimensions.x * viewportBounds.x + this.paperScope.view.bounds.width / 2,
+            tiledImage.source.dimensions.y * viewportBounds.y + this.paperScope.view.bounds.height / 2);
         this.paperScope.view.update(true);
 
       }
@@ -193,7 +186,7 @@
 /**
 
  Known issues:
-   Layer translate does not work properly with multiple slots on the left/right (the space left for the viewer is too narrow)
-   Layer rotation and translate near canvas does not work properly;
+ Layer translate does not work properly with multiple slots on the left/right (the space left for the viewer is too narrow)
+ Layer rotation and translate near canvas does not work properly;
 
  */

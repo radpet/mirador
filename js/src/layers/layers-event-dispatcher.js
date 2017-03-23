@@ -8,7 +8,6 @@
 
   LayersEventDispatcher.prototype = {
     emit: function (event, data) {
-      console.log('LayersDispatcher is emiting',this.windowId + ':' + event);
       this.eventEmitter.publish(this.windowId + ':' + event, [data]);
     }
   };

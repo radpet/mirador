@@ -27,16 +27,14 @@
       this.imageResourceTransformCanvas = new $.ImageResourceTransformCanvas({
         windowId: this.windowId,
         eventEmitter: this.eventEmitter,
-        osd: this.osd
+        osd: this.osd,
+        state: this.state
       });
 
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':layers-zIndex-updated', function (event, data) {
-
         _this.imageResources.forEach(function (imageRes) {
           imageRes.updateItemIndex();
         });
-
-
       }));
 
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':layers-add-resource', function (event, data) {
@@ -105,7 +103,6 @@
 
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':layers-transform-resource-mode-changed', function (event, resource) {
         if (!_this.imageResourceTransformCanvas.enabled && _this.shouldActivateTransformCanvas(resource)) {
-          console.log('should lock and add transform canvas');
           resource.setStatus($.ImageResource.Status.TRANSFORMING);
           _this.imageResourceTransformCanvas.enable(resource);
           _this.eventEmitter.publish(_this.windowId + ':layers-transform-resource-enabled', [resource]);
@@ -113,7 +110,6 @@
         }
 
         if (_this.shouldDeactivateTransformCanvas(resource)) {
-          console.log('should remove transform overlay');
           resource.setStatus($.ImageResource.Status.SHOWN);
           _this.imageResourceTransformCanvas.disable(resource);
           _this.eventEmitter.publish(_this.windowId + ':layers-transform-resource-disabled', [resource]);
@@ -128,10 +124,10 @@
       return !resource.isLocked() && resource.getStatus() === $.ImageResource.Status.SHOWN;
     },
     shouldActivateTransformCanvas: function (resource) {
-      return resource.getStatus() !== $.ImageResource.Status.TRANSFORMING && !resource.isLocked() && resource.isVisible();
+      var annoState = this.state.getWindowObjectById(this.windowId).annotationState;
+      return (typeof annoState === 'undefined' || annoState === 'off') && resource.getStatus() !== $.ImageResource.Status.TRANSFORMING && !resource.isLocked() && resource.isVisible();
     },
     shouldDeactivateTransformCanvas: function (resouce) {
-      console.log(resouce.getStatus());
       return resouce.getStatus() === $.ImageResource.Status.TRANSFORMING;
     },
 
@@ -145,12 +141,15 @@
         eventEmitter: _this.eventEmitter
       });
 
+      var loadedImagesFromCanvasPromise = jQuery.Deferred();
+
       _this.imageResources = _this.imageResourceLoader.loadAllImagesFromCanvas();
+      loadedImagesFromCanvasPromise.resolve(_this.imageResources);
+      _this.initialImageStrategy.setTiledImages(loadedImagesFromCanvasPromise);
 
-      var initialImage = this.initialImageStrategy.chooseInitialImage(_this.canvas);
-      _this.imageResources[initialImage.index].lock(true);
-      _this.imageResources[initialImage.index].openAsInitialTile(); //possible race condition, test and add promise if needed
-
+      var initialImage = _this.imageResources[this.initialImageStrategy.chooseInitialImage().index];
+      initialImage.lock(true);
+      initialImage.openAsInitialTile(); //possible race condition, test and add promise if needed
 
       _this.imageResources.forEach(function (image, index) {
         if (index !== initialImage.index) {

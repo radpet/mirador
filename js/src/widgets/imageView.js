@@ -37,11 +37,6 @@
         this.currentImgIndex = $.getImageIndexById(this.imagesList, this.canvasID);
       }
 
-      this.layersSettings = this.state.getStateProperty('layersSettings');
-      console.log(this.layersSettings);
-      this.initialImageStrategy = new $[this.layersSettings.initialImageStrategy.module]();
-      console.log('layers settings', this.layersSettings);
-
       if (!this.osdOptions) {
         this.osdOptions = {
           osdBounds: null,
@@ -49,6 +44,13 @@
         };
       }
       this.currentImg = this.imagesList[this.currentImgIndex];
+
+      this.layersSettings = this.state.getStateProperty('layersSettings');
+
+      this.initialImageStrategy = new $[this.layersSettings.initialImageStrategy.module]();
+      //I suggest this being in the shared context
+      this.initialImageStrategy.setCanvas(this.currentImg);
+
       this.element = jQuery(this.template()).appendTo(this.appendTo);
       this.elemAnno = jQuery('<div/>')
         .addClass(this.annoCls)
@@ -610,7 +612,6 @@
         _this.osd.addHandler('open', function () {
           _this.eventEmitter.publish('osdOpen.' + _this.windowId, [_this.osd, _this.canvasID]);
 
-          console.log('opening');
           if (_this.layersSettings.enabled) {
 
             var MultiImageRenderer = new $.OSDLayersRenderer({
@@ -618,7 +619,7 @@
               windowId: _this.windowId,
               canvas: _this.currentImg,
               eventEmitter: _this.eventEmitter,
-              state:_this.state,
+              state: _this.state,
               initialImageStrategy: _this.initialImageStrategy
             });
 
@@ -680,7 +681,8 @@
         viewer: _this.osd,
         windowId: _this.windowId,
         element: element,
-        eventEmitter: _this.eventEmitter
+        eventEmitter: _this.eventEmitter,
+        initialImageStrategy: _this.initialImageStrategy
       });
     },
 
@@ -690,6 +692,7 @@
         this.canvasID = canvasID;
         this.currentImgIndex = $.getImageIndexById(this.imagesList, canvasID);
         this.currentImg = this.imagesList[this.currentImgIndex];
+        this.initialImageStrategy.setCanvas(this.currentImg);
         this.osdOptions = {
           osdBounds: null,
           zoomLevel: null

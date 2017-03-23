@@ -62,7 +62,7 @@
         if (typeof errorCallback === "function") {
           errorCallback();
         } else {
-          console.log("There was an error searching this endpoint");
+
         }
       }
     },
