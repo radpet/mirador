@@ -676,7 +676,7 @@
         _this.canvas.style.transform = transform;
         _this.canvas.style.marginLeft = '0px';
         _this.canvas.style.marginTop = '0px';
-        if (_this.paperScope && _this.paperScope.view) {
+        if (_this.paperScope && _this.paperScope.view && tiledImage) {
           _this.paperScope.view.viewSize = new _this.paperScope.Size(_this.canvas.width, _this.canvas.height);
           _this.paperScope.view.zoom = tiledImage.viewportToImageZoom(_this.viewer.viewport.getZoom(true));
           _this.paperScope.view.center = new _this.paperScope.Size(
