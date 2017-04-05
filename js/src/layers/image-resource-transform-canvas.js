@@ -55,22 +55,22 @@
 
       this.resize(imageResource.tiledImage);
       _this.raster = raster;
-      var viewportBounds = this.osd.viewport.getBounds(true);
       var imageBounds = imageResource.tiledImage.getBoundsNoRotate(true);
       var imageBoundsCenter = imageBounds.getCenter();
       var imageToOSDViewportRatio;
-      // get the base vectors size ratio
-      if (imageBounds.width === 1) {
-        imageToOSDViewportRatio = (imageResource.tiledImage.source.width / imageBounds.width);
-      } else {
-        imageToOSDViewportRatio = (imageResource.tiledImage.source.height / imageBounds.height);
-      }
+
+      console.log(imageBounds,imageBounds.getCenter());
+      console.log(imageResource.tiledImage.source);
+      imageToOSDViewportRatio = (imageResource.tiledImage.source.width / (imageBounds.width));
+
+      console.log('image to osd ratio',imageToOSDViewportRatio);
+
 
       var annotationUtils = new $.AnnotationUtils();
       raster.onLoad = function () {
-        imageResource.hide();
+       // imageResource.hide();
 
-        raster.position = new _this.paperScope.Point(imageBoundsCenter.x * imageToOSDViewportRatio, imageBoundsCenter.y * imageToOSDViewportRatio);
+        raster.position = new _this.paperScope.Point(imageBoundsCenter.x * imageToOSDViewportRatio , imageBoundsCenter.y * imageToOSDViewportRatio);
         raster.width = imageResource.tiledImage.source.width;
         raster.height = imageResource.tiledImage.source.height;
         raster.fullySelected = true;
@@ -116,7 +116,7 @@
         var clone = raster.clone();
         clone.rotate(-imageResource.getRotation());
         clone.visible = false;
-
+        console.log('clone bounds',clone.bounds);
         var newOsdPos = new OpenSeadragon.Point(clone.bounds.x / imageToOSDViewportRatio, clone.bounds.y / imageToOSDViewportRatio);
         imageResource.tiledImage.setPosition(newOsdPos);
         clone.remove();
@@ -153,7 +153,6 @@
     },
 
     resize: function (tiledImage) {
-
       var viewportBounds = this.osd.viewport.getBounds(true);
       /* in viewport coordinates */
       this.canvas.width = this.osd.viewport.containerSize.x;
@@ -167,11 +166,18 @@
       if (this.paperScope && this.paperScope.view) {
         this.paperScope.view.viewSize = new this.paperScope.Size(this.canvas.width, this.canvas.height);
         this.paperScope.view.zoom = tiledImage.viewportToImageZoom(this.osd.viewport.getZoom(true));
+        console.log('zoom',this.paperScope.view.zoom,1/this.paperScope.view.zoom);
+        console.log('viewport center',viewportBounds.getCenter());
         this.paperScope.view.center = new this.paperScope.Size(
-            tiledImage.source.dimensions.x * viewportBounds.x + this.paperScope.view.bounds.width / 2,
-            tiledImage.source.dimensions.y * viewportBounds.y + this.paperScope.view.bounds.height / 2);
+            //(tiledImage.source.dimensions.x /2 * viewportBounds.x + this.paperScope.view.bounds.width / 2),
+         // tiledImage.source.dimensions.y /2 * viewportBounds.y + this.paperScope.view.bounds.height / 2
+            viewportBounds.getCenter().x * tiledImage.source.dimensions.x* (1/tiledImage.getBounds(true).width ),
+            viewportBounds.getCenter().y * tiledImage.source.dimensions.x*( 1/tiledImage.getBounds(true).width )
+        );
+        if(this.center) this.center.remove();
+        this.center = new this.paperScope.Path.Circle(new this.paperScope.Point(tiledImage.source.dimensions.x * viewportBounds.x + this.paperScope.view.bounds.width / 2, tiledImage.source.dimensions.y * viewportBounds.y + this.paperScope.view.bounds.height / 2), 50);
+        this.center.fillColor = 'red';
         this.paperScope.view.update(true);
-
       }
     }
 

@@ -94,10 +94,11 @@
       }));
 
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':layers-visibility-change', function (event, imageResource) {
+        imageResource.tiledImage.setWidth(imageResource.tiledImage.getBounds(true).width/2,true);
         if (imageResource.isVisible()) {
-          imageResource.hide();
+          //imageResource.hide();
         } else {
-          imageResource.show();
+         // imageResource.show();
         }
       }));
 
@@ -146,13 +147,14 @@
       _this.imageResources = _this.imageResourceLoader.loadAllImagesFromCanvas();
       loadedImagesFromCanvasPromise.resolve(_this.imageResources);
       _this.initialImageStrategy.setTiledImages(loadedImagesFromCanvasPromise);
-
-      var initialImage = _this.imageResources[this.initialImageStrategy.chooseInitialImage().index];
+      var initialImageIndex = this.initialImageStrategy.chooseInitialImage().index;
+      var initialImage = _this.imageResources[initialImageIndex];
       initialImage.lock(true);
       initialImage.openAsInitialTile(); //possible race condition, test and add promise if needed
 
       _this.imageResources.forEach(function (image, index) {
-        if (index !== initialImage.index) {
+
+        if (index !== initialImageIndex) {
           image.openTileSource();
         }
       });
