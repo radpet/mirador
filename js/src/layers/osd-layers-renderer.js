@@ -94,11 +94,10 @@
       }));
 
       this.events.push(this.eventEmitter.subscribe(this.windowId + ':layers-visibility-change', function (event, imageResource) {
-        imageResource.tiledImage.setWidth(imageResource.tiledImage.getBounds(true).width/2,true);
         if (imageResource.isVisible()) {
-          //imageResource.hide();
+          imageResource.hide();
         } else {
-         // imageResource.show();
+         imageResource.show();
         }
       }));
 

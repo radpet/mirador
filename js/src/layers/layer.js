@@ -145,7 +145,7 @@
       '<div class="horizontal-menu">',
       '<label class="layer-control layer-visible"><input type="checkbox" name="" checked /><i></i></label>',
       '<label class="layer-control layer-lock {{#if isHardLocked}}disabled{{/if}}"><input type="checkbox" {{#if isLocked }} checked{{/if}} {{#if isHardLocked}}disabled="disabled"{{/if}} name="" /><i></i></label>',
-      '<label class="layer-control layer-transform {{#if isHardLocked}}disabled{{/if}} "><i class="fa fa-crop" aria-hidden="true"></i></label>',
+      '<label class="layer-control layer-transform {{#if isHardLocked}}disabled{{/if}} "><i class="fa fa-expand" aria-hidden="true"></i></label>',
       '<label class="layer-control layer-effects"><input type="checkbox" name="" checked /><i></i></label>',
       '<label class="layer-control layer-remove  {{#if isHardLocked}}disabled{{/if}}"><i class="fa fa-times" aria-hidden="true"></i></label>',
       '</div>',

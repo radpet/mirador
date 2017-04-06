@@ -38,6 +38,7 @@
       });
       this.paperScope = new paper.PaperScope();
       this.paperScope.setup(this.canvas);
+      this.paperScope.project.options.handleSize = 10;
       this.paperScope.activate();
 
       //too hacked create a parser
@@ -56,40 +57,143 @@
       this.resize(imageResource.tiledImage);
       _this.raster = raster;
       var imageBounds = imageResource.tiledImage.getBoundsNoRotate(true);
-      var imageBoundsCenter = imageBounds.getCenter();
-      var imageToOSDViewportRatio;
+      var imageBoundsCenter = imageBounds.getCenter(true);
+      var imageWidthHeightRatio = imageResource.tiledImage.source.width / imageResource.tiledImage.source.height;
+      var imageToOSDViewportRatio = (imageResource.tiledImage.source.width / (imageBounds.width));
 
-      console.log(imageBounds,imageBounds.getCenter());
-      console.log(imageResource.tiledImage.source);
-      imageToOSDViewportRatio = (imageResource.tiledImage.source.width / (imageBounds.width));
+      console.log('image to osd ratio', imageToOSDViewportRatio);
 
-      console.log('image to osd ratio',imageToOSDViewportRatio);
+
+      var mouseTool = new this.paperScope.Tool();
+      mouseTool.overlay = this;
+
+      var mode = ''; // can be resize | translate
+      var handlePoint = null;
+      var scaleCenter = null;
+      var scaleSign = null;
+
+      var epsEqual = function (x, y) {
+        return Math.abs(x - y) <= 0.001;
+      };
+
+      var pointEqual = function (a, b) {
+        return epsEqual(a.x, b.x) && epsEqual(a.y, b.y);
+      };
+
+      mouseTool.onMouseDrag = function (event) {
+        var newOsdPos;
+        if (mode === 'translate') {
+          raster.data.group.translateByXY(event.delta.x, event.delta.y);
+          newOsdPos = new OpenSeadragon.Point(raster.bounds.x / imageToOSDViewportRatio, raster.bounds.y / imageToOSDViewportRatio);
+          imageResource.tiledImage.setPosition(newOsdPos);
+          return;
+        }
+
+        if (mode === 'resize') {
+
+          var newWidth = raster.width + scaleSign * event.delta.x;
+          var scaleRatio = 1.0 * newWidth / raster.width;
+
+          raster.data.group.getItem().scale(scaleRatio, scaleCenter);
+
+          imageResource.tiledImage.setWidth(imageResource.tiledImage.getBounds(true).width * scaleRatio, true);
+          newOsdPos = new OpenSeadragon.Point(raster.bounds.x / imageToOSDViewportRatio, raster.bounds.y / imageToOSDViewportRatio);
+          imageResource.tiledImage.setPosition(newOsdPos);
+
+        }
+
+        // The osd method setPosition rotates the point that is why we should pass the bounds without the rotation
+        // var clone = raster.clone();
+        // clone.rotate(-imageResource.getRotation());
+        // clone.visible = false;
+
+      };
+
+      mouseTool.onMouseDown = function (event) {
+        var hitResult = _this.paperScope.project.hitTest(event.point, {handles: true, stroke: true, tolerance: 25});
+        if (hitResult) {
+          if (hitResult.type === 'handle-in') {
+            mode = 'resize';
+            handlePoint = hitResult.point;
+            if (pointEqual(raster.data.selectionRect.segments[0].point, handlePoint)) {
+              scaleCenter = raster.bounds.bottomRight;
+              scaleSign = -1;
+            }
+            else if (pointEqual(raster.data.selectionRect.segments[1].point, handlePoint)) {
+              scaleCenter = raster.bounds.bottomLeft;
+              scaleSign = 1;
+            }
+            else if (pointEqual(raster.data.selectionRect.segments[2].point, handlePoint)) {
+              scaleCenter = raster.bounds.topLeft;
+              scaleSign = 1;
+            }
+            else if (pointEqual(raster.data.selectionRect.segments[3].point, handlePoint)) {
+              scaleCenter = raster.bounds.topRight;
+              scaleSign = -1;
+            }
+          } else {
+            mode = 'translate';
+            handlePoint = null;
+          }
+        }
+      };
+
+      mouseTool.onMouseMove = function (event) {
+        var hitResult = _this.paperScope.project.hitTest(event.point, {handles: true, stroke: true, tolerance: 25});
+        if (hitResult) {
+          if (hitResult.type === 'handle-in') {
+            _this.eventEmitter.publish('POINTER_CURSOR.' + _this.windowId);
+          }
+        } else {
+          _this.eventEmitter.publish('DEFAULT_CURSOR.' + _this.windowId);
+        }
+      };
 
 
       var annotationUtils = new $.AnnotationUtils();
       raster.onLoad = function () {
-       // imageResource.hide();
+        // imageResource.hide();
 
-        raster.position = new _this.paperScope.Point(imageBoundsCenter.x * imageToOSDViewportRatio , imageBoundsCenter.y * imageToOSDViewportRatio);
+        raster.position = new _this.paperScope.Point(imageBoundsCenter.x * imageToOSDViewportRatio, imageBoundsCenter.y * imageToOSDViewportRatio);
         raster.width = imageResource.tiledImage.source.width;
         raster.height = imageResource.tiledImage.source.height;
-        raster.fullySelected = true;
+        raster.fullySelected = false;
 
-        imageResource.setRotation(imageResource.getRotation());
+        // imageResource.setRotation(imageResource.getRotation());
 
-        raster.rotate(imageResource.getRotation());
+        // raster.rotate(imageResource.getRotation());
 
-        if (raster.data.rotationIcon) {
-          raster.data.rotation = imageResource.getRotation();
-          raster.data.rotationIcon.addData('pivot', raster.bounds.getCenter());
-          raster.data.rotationIcon.addData('type', 'rotationIcon');
-          raster.data.rotationIcon.addData('self', raster.data.rotationIcon);
-          raster.data.rotationIcon.addData('parent', raster);
+        // if (raster.data.rotationIcon) {
+        //   raster.data.rotation = imageResource.getRotation();
+        //   raster.data.rotationIcon.addData('pivot', raster.bounds.getCenter());
+        //   raster.data.rotationIcon.addData('type', 'rotationIcon');
+        //   raster.data.rotationIcon.addData('self', raster.data.rotationIcon);
+        //   raster.data.rotationIcon.addData('parent', raster);
+        //
+        //   raster.data.rotationIcon.setPosition(raster.data.rotationIcon.getData('pivot').add(new _this.paperScope.Point(0, 21 / _this.paperScope.view.zoom).rotate(raster.data.rotation)));
+        // }
 
-          raster.data.rotationIcon.setPosition(raster.data.rotationIcon.getData('pivot').add(new _this.paperScope.Point(0, 21 / _this.paperScope.view.zoom).rotate(raster.data.rotation)));
+        if (!raster.data.selectionRect) {
+          var selectionRect = new _this.paperScope.Path(
+              {
+                segments: [raster.bounds.topLeft, raster.bounds.topRight, raster.bounds.bottomRight, raster.bounds.bottomLeft],
+                fullySelected: true
+              }
+          );
+          selectionRect.segments[0].selected = false;
+          selectionRect.segments[1].selected = false;
+          selectionRect.segments[2].selected = false;
+          selectionRect.segments[3].selected = false;
+          selectionRect.closed = true;
+          raster.data.group.getItem().appendTop(selectionRect);
+          raster.data.selectionRect = selectionRect;
+          selectionRect.fillColor = 'red';
+          selectionRect.opacity = 0.00000001;
+
         }
 
       };
+
 
       if (!raster.data.rotationIcon) {
         raster.data.rotationIcon = new annotationUtils.RotationIcon(_this.paperScope, {
@@ -98,39 +202,19 @@
         });
       }
 
+
       if (!raster.data.group) {
-        raster.data.group = new annotationUtils.Group(this.paperScope, [raster, raster.data.rotationIcon.getItem(), raster.data.rotationIcon.getMask().getItem()]);
+        raster.data.group = new annotationUtils.Group(this.paperScope, [raster]);
       }
 
-      raster.data.rotationIcon.getMask().getItem().onMouseDrag = function (event) {
-        var rotation = Math.atan2(event.point.y - raster.position.y + event.delta.y, event.point.x - raster.position.x + event.delta.x) - Math.atan2(event.point.y - raster.position.y, event.point.x - raster.position.x);
-        rotation = rotation * (180 / Math.PI);
-        raster.data.group.rotate(rotation, raster.position);
-        raster.data.rotationIcon.rotate(-rotation);
-        imageResource.rotate(rotation, true);
-      };
+      // raster.data.rotationIcon.getMask().getItem().onMouseDrag = function (event) {
+      //   var rotation = Math.atan2(event.point.y - raster.position.y + event.delta.y, event.point.x - raster.position.x + event.delta.x) - Math.atan2(event.point.y - raster.position.y, event.point.x - raster.position.x);
+      //   rotation = rotation * (180 / Math.PI);
+      //   raster.data.group.rotate(rotation, raster.position);
+      //   raster.data.rotationIcon.rotate(-rotation);
+      //   imageResource.rotate(rotation, true);
+      // };
 
-      raster.onMouseDrag = function (event) {
-        raster.data.group.translateByXY(event.delta.x, event.delta.y);
-        // The osd method setPosition rotates the point that is why we should pass the bounds without the rotation
-        var clone = raster.clone();
-        clone.rotate(-imageResource.getRotation());
-        clone.visible = false;
-        console.log('clone bounds',clone.bounds);
-        var newOsdPos = new OpenSeadragon.Point(clone.bounds.x / imageToOSDViewportRatio, clone.bounds.y / imageToOSDViewportRatio);
-        imageResource.tiledImage.setPosition(newOsdPos);
-        clone.remove();
-      };
-
-      this.resize(imageResource.tiledImage);
-
-      var shape = new this.paperScope.Path({
-        //segments: segments,
-        fullySelected: true,
-        name: "_dummy"
-      });
-
-      shape.fillColor = "red";
 
       this.paperScope.view.draw();
 
@@ -148,6 +232,8 @@
     _clearCanvas: function () {
       this.currentImageResource.show();
       this.currentImageResource = null;
+      this.paperScope.clear();
+      this.paperScope.remove();
       this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.osd.removeOverlay(this.canvas);
     },
@@ -166,15 +252,15 @@
       if (this.paperScope && this.paperScope.view) {
         this.paperScope.view.viewSize = new this.paperScope.Size(this.canvas.width, this.canvas.height);
         this.paperScope.view.zoom = tiledImage.viewportToImageZoom(this.osd.viewport.getZoom(true));
-        console.log('zoom',this.paperScope.view.zoom,1/this.paperScope.view.zoom);
-        console.log('viewport center',viewportBounds.getCenter());
+        console.log('zoom', this.paperScope.view.zoom, 1 / this.paperScope.view.zoom);
+        console.log('viewport center', viewportBounds.getCenter());
         this.paperScope.view.center = new this.paperScope.Size(
-            //(tiledImage.source.dimensions.x /2 * viewportBounds.x + this.paperScope.view.bounds.width / 2),
-         // tiledImage.source.dimensions.y /2 * viewportBounds.y + this.paperScope.view.bounds.height / 2
-            viewportBounds.getCenter().x * tiledImage.source.dimensions.x* (1/tiledImage.getBounds(true).width ),
-            viewportBounds.getCenter().y * tiledImage.source.dimensions.x*( 1/tiledImage.getBounds(true).width )
+            // (tiledImage.source.dimensions.x * viewportBounds.x + this.paperScope.view.bounds.width / 2),
+            //tiledImage.source.dimensions.x* viewportBounds.y + this.paperScope.view.bounds.height / 2
+            tiledImage.source.dimensions.x * viewportBounds.getCenter().x * (1 / tiledImage.getBounds(true).width ),
+            tiledImage.source.dimensions.x * viewportBounds.getCenter().y * ( 1 / tiledImage.getBounds(true).width )
         );
-        if(this.center) this.center.remove();
+        if (this.center) this.center.remove();
         this.center = new this.paperScope.Path.Circle(new this.paperScope.Point(tiledImage.source.dimensions.x * viewportBounds.x + this.paperScope.view.bounds.width / 2, tiledImage.source.dimensions.y * viewportBounds.y + this.paperScope.view.bounds.height / 2), 50);
         this.center.fillColor = 'red';
         this.paperScope.view.update(true);
