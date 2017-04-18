@@ -67,15 +67,17 @@
       element.find('.layer-control.layer-lock input').click(this.handleLockClick.bind(this));
       element.find('.layer-transform-actions .save').click(this.handleTransformModeSave.bind(this));
       element.find('.layer-transform-actions .cancel').click(this.handleTransformModeCancel.bind(this));
+
+      this.setQtips(element);
     },
-    handleTransformModeSave:function(){
-      this.eventEmitter.publish(this.windowId + ':layers-transform-resource-mode-changed', [this.imageResource,true]);
+    handleTransformModeSave: function () {
+      this.eventEmitter.publish(this.windowId + ':layers-transform-resource-mode-changed', [this.imageResource, true]);
     },
-    handleTransformModeCancel:function(){
-      this.eventEmitter.publish(this.windowId + ':layers-transform-resource-mode-changed', [this.imageResource,false]);
+    handleTransformModeCancel: function () {
+      this.eventEmitter.publish(this.windowId + ':layers-transform-resource-mode-changed', [this.imageResource, false]);
     },
     handleLayoutTransform: function () {
-      if(!this.transformModeEnabled){
+      if (!this.transformModeEnabled) {
         this.eventEmitter.publish(this.windowId + ':layers-transform-resource-mode-changed', [this.imageResource]);
       }
     },
@@ -83,8 +85,10 @@
       this.eventEmitter.publish(this.windowId + ':layers-remove-resource', [this.imageResource]);
     },
     destroy: function () {
-      this.eventEmitter.unsubscribe(this.transformEnabledEvent.eventName,this.transformEnabledEvent.handler);
-      this.eventEmitter.unsubscribe(this.transformDisabledEvent.eventName,this.transformDisabledEvent.handler);
+      this.eventEmitter.unsubscribe(this.transformEnabledEvent.eventName, this.transformEnabledEvent.handler);
+      this.eventEmitter.unsubscribe(this.transformDisabledEvent.eventName, this.transformDisabledEvent.handler);
+
+      this.view.find('.mirador-tooltip').qtip("destroy");
       this.view.remove();
     },
     initLayoutEffectsSliders: function (element) {
@@ -149,6 +153,26 @@
     getModel: function () {
       return this.model;
     },
+    setQtips: function (element) {
+      var _this = this;
+      element.find('.mirador-tooltip').each(function () {
+
+        jQuery(this).qtip({
+          content: {
+            text: jQuery(this).attr('title')
+          },
+          position: {
+            my: 'bottom center',
+            at: 'top center',
+            viewport: true,
+            container: element
+          },
+          style: {
+            classes: 'qtip-dark qtip-shadow qtip-rounded'
+          }
+        });
+      });
+    },
     template: $.Handlebars.compile([
       '<li class="layer" id="{{getId}}">',
       '<div class="drag-handle"> ',
@@ -160,17 +184,17 @@
       '<div class="content">',
       '<div class="title"><span  title="{{getTitle}}" class="id">{{getTitle}}</span></div>',
       '<div class="horizontal-menu">',
-      '<label class="layer-control layer-visible"><input type="checkbox" name="" checked /><i></i></label>',
-      '<label class="layer-control layer-lock {{#if isHardLocked}}disabled{{/if}}"><input type="checkbox" {{#if isLocked }} checked{{/if}} {{#if isHardLocked}}disabled="disabled"{{/if}} name="" /><i></i></label>',
-      '<label class="layer-control layer-transform {{#if isHardLocked}}disabled{{/if}} "><i class="fa fa-expand" aria-hidden="true"></i></label>',
-      '<label class="layer-control layer-effects"><input type="checkbox" name="" checked /><i></i></label>',
-      '<label class="layer-control layer-remove  {{#if isHardLocked}}disabled{{/if}}"><i class="fa fa-times" aria-hidden="true"></i></label>',
+      '<label class="layer-control layer-visible mirador-tooltip"  title="{{t "layerVisibleTooltip"}}"><input type="checkbox" name="" checked /><i></i></label>',
+      '<label class="layer-control layer-lock mirador-tooltip {{#if isHardLocked}}disabled{{/if}}" title="{{t "layerLockTooltip"}}"><input type="checkbox" {{#if isLocked }} checked{{/if}} {{#if isHardLocked}}disabled="disabled"{{/if}} name="" /><i></i></label>',
+      '<label class="layer-control layer-transform mirador-tooltip {{#if isHardLocked}}disabled{{/if}} " title="{{t "layerTransformTooltip"}}"><i class="fa fa-expand" aria-hidden="true"></i></label>',
+      '<label class="layer-control layer-effects mirador-tooltip" title="{{t "layerEffectsTooltip"}}"><input type="checkbox" name="" checked /><i></i></label>',
+      '<label class="layer-control layer-remove mirador-tooltip {{#if isHardLocked}}disabled{{/if}}" title="{{t "layerRemoveTooltip"}}"><i class="fa fa-times" aria-hidden="true"></i></label>',
       '</div>',
       // '<div class="reset-button"><label class="layer-control layer-reset"><i class="fa fa-refresh" aria-hidden="true"></i></label></div>',
       '</div>',
       '</div>',
       '<div class="layer-effects-container hide">',
-      '<div class="layer-control-slider-container"><label><i class="fa fa-adjust"></i></label><div class="layer-control-slider opacity-slider"></div> <span class="opacity-slider-value">100</span> </div>',
+      '<div class="layer-control-slider-container"><label class="mirador-tooltip" title="{{t "layerEffectsOpacityTooltip"}}"><i class="fa fa-adjust"></i></label><div class="layer-control-slider opacity-slider"></div> <span class="opacity-slider-value">100</span> </div>',
       // '<div class="layer-control-slider-container"><label><i class="material-icons">brightness_6</i></label><div class="layer-control-slider brightness-slider"></div></div>',
       // '<div class="layer-control-slider-container"><label><i class="material-icons">wb_sunny</i></label><div class="layer-control-slider contrast-slider"></div></div>',
       '</div>',
@@ -205,7 +229,7 @@
       return this.imageResource.imageInIIIF;
     },
     getThumbnail: function () {
-     return $.Iiif.getThumbnailForImage(this.getImage(),128);
+      return $.Iiif.getThumbnailForImage(this.getImage(), 128);
     }
   };
 

@@ -49,7 +49,8 @@
 }
 
 .layer .layer-control {
-    padding-right: 5px;
+
+    padding-right:5px;
     display: inline-block;
     vertical-align: middle;
     cursor: pointer;
@@ -62,6 +63,10 @@
 
 .layer label.layer-control > input + i:before {
     font-family: FontAwesome;
+}
+
+.layer .layer-control.disabled{
+    pointer-events:auto ;
 }
 
 .layer .main-section {
