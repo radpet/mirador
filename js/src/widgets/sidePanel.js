@@ -45,7 +45,7 @@
             options : {
               available: _this.layersTabAvailable,
               id:'layersTab', 
-              label:'Layers'
+              label:i18next.t('layersTabLabel')
             }
           },
           /*{
