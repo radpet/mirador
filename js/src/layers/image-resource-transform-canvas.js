@@ -194,12 +194,12 @@
       };
 
 
-      if (!raster.data.rotationIcon) {
-        raster.data.rotationIcon = new annotationUtils.RotationIcon(_this.paperScope, {
-          name: raster.name + 'rotation',
-          fillColor: raster.selectedColor
-        });
-      }
+      // if (!raster.data.rotationIcon) {
+      //   raster.data.rotationIcon = new annotationUtils.RotationIcon(_this.paperScope, {
+      //     name: raster.name + 'rotation',
+      //     fillColor: raster.selectedColor
+      //   });
+      // }
 
 
       if (!raster.data.group) {
