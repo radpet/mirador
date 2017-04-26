@@ -46,6 +46,7 @@
 
       var _this = this;
       var raster = new this.paperScope.Raster({
+        crossOrigin: 'anonymous',
         source: url,
         position: {
           x: 0,
