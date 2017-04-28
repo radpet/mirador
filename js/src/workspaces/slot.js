@@ -171,13 +171,13 @@
 
           _this.eventEmitter.publish('ADD_WINDOW', windowConfig);
 
-        } 
-        
+        }
+
         else if (typeof imageInfoUrl !== 'undefined') {
           if (!_this.state.getStateProperty('manifests')[imageInfoUrl]) {
             _this.eventEmitter.publish('ADD_MANIFEST_FROM_URL', [imageInfoUrl, "(Added from URL)"]);
           }
-        } 
+        }
         else if (typeof collectionUrl !== 'undefined'){
           jQuery.getJSON(collectionUrl).done(function (data, status, jqXHR) {
             if (data.hasOwnProperty('manifests')){
@@ -195,15 +195,17 @@
             }
           });
 
-          //TODO: 
+          //TODO:
           //this works;
           //but you might want to check if some "publish" action would be better
           _this.addItem();
-          
+
         }
         else {
           if (!_this.state.getStateProperty('manifests')[imageInfoUrl]) {
-            _this.eventEmitter.publish('ADD_MANIFEST_FROM_URL', [manifestUrl, "(Added from URL)"]);
+            if (manifestUrl.indexOf('.json') !== -1) {
+              _this.eventEmitter.publish('ADD_MANIFEST_FROM_URL', [manifestUrl, "(Added from URL)"]);
+            }
           }
         }
 
