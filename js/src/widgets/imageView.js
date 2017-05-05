@@ -554,6 +554,11 @@
       this.element.find('.' + this.osdCls).remove();
 
       jQuery.getJSON(infoJsonUrl).done(function (infoJson, status, jqXHR) {
+        if(_this.osd){
+          _this.osd.destroy();
+          _this.osd = null;
+        }
+
         _this.elemOsd =
           jQuery('<div/>')
         .addClass(_this.osdCls)
